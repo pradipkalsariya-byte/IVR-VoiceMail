@@ -1,0 +1,15 @@
+node_modules/
+.next/
+.env
+# gmail-authorize's atomic-write staging file — briefly holds the refresh token if interrupted.
+.env.tmp
+*.tsbuildinfo
+next-env.d.ts
+
+# Archive exports and their output NEVER go in git — they are real children's data.
+# The analyser writes redacted reports here; even those stay local until reviewed.
+.scratch/
+analysis/
+*.mbox
+*.mbox.gz
+*.zip

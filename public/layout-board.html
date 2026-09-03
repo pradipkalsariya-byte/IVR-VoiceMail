@@ -1,0 +1,889 @@
+<!doctype html>
+<!-- TEMPLATE for the Nucleus layout boards. Do NOT edit a generated <app>/public/layout-board.html
+     by hand — edit tools/layout-board/baselines/<app>.json (inventory) or this template (shell)
+     and run: node tools/layout-board/build.mjs <app>            (see .claude/skills/layout-board) -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Front Desk Layout Board — drag, comment, copy the brief</title>
+<style>
+  :root {
+    --blue: #005BAA; --ink: #1e293b; --muted: #64748b; --line: #e2e8f0;
+    --bg: #f1f5f9; --card: #ffffff; --removed: #94a3b8;
+  }
+  * { box-sizing: border-box; margin: 0; }
+  body { font: 13px/1.45 -apple-system, "Segoe UI", Roboto, Arial, sans-serif; color: var(--ink); background: var(--bg); }
+
+  header.bar {
+    position: sticky; top: 0; z-index: 50; background: #fff; border-bottom: 2px solid var(--blue);
+    padding: 10px 18px; display: flex; flex-wrap: wrap; align-items: center; gap: 10px;
+  }
+  header.bar h1 { font-size: 16px; color: var(--blue); margin-right: 4px; }
+  header.bar .hint { color: var(--muted); font-size: 12px; flex: 1 1 260px; }
+  header.bar button {
+    font: 600 12px/1 inherit; padding: 8px 12px; border-radius: 6px; border: 1px solid var(--blue);
+    background: var(--blue); color: #fff; cursor: pointer;
+  }
+  header.bar button.secondary { background: #fff; color: var(--blue); }
+  header.bar button.ghost { background: #fff; color: var(--muted); border-color: var(--line); }
+  #savedFlash { font-size: 11px; color: #16a34a; opacity: 0; transition: opacity .4s; }
+  #savedFlash.on { opacity: 1; }
+
+  main { padding: 14px 18px 60px; }
+  section.group { margin-bottom: 22px; }
+  section.group > h2 {
+    font-size: 13px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted);
+    border-bottom: 1px solid var(--line); padding-bottom: 4px; margin-bottom: 10px;
+  }
+  .columns { display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-start; }
+
+  .col {
+    width: 300px; background: #e8eef5; border: 1px solid #d3dee9; border-radius: 8px; padding: 8px;
+    display: flex; flex-direction: column; gap: 6px;
+  }
+  .col.dragover { outline: 2px dashed var(--blue); outline-offset: -2px; }
+  .col-head { display: flex; align-items: baseline; gap: 6px; padding: 2px 2px 0; }
+  .col-head .t { font-weight: 700; font-size: 13px; }
+  .col-head .route { font-family: Consolas, monospace; font-size: 10.5px; color: var(--blue); }
+  .col-head .n { margin-left: auto; font-size: 10.5px; color: var(--muted); }
+  .col textarea.pagenote {
+    width: 100%; border: 1px dashed #c4d2e0; border-radius: 6px; padding: 5px 7px; font: italic 11.5px/1.4 inherit;
+    color: var(--ink); background: #fdfdf5; resize: none; overflow: hidden;
+  }
+  .cards { display: flex; flex-direction: column; gap: 6px; min-height: 24px; }
+
+  .card {
+    background: var(--card); border: 1px solid var(--line); border-left: 3px solid var(--blue);
+    border-radius: 6px; padding: 7px 8px 6px; box-shadow: 0 1px 2px rgba(15,23,42,.06);
+  }
+  .card.dragging { opacity: .35; }
+  .card.removed { opacity: .5; border-left-color: var(--removed); background: #f8fafc; }
+  .card.removed .title { text-decoration: line-through; color: var(--muted); }
+  .card.idea { border-left-color: #d97706; background: #fffbeb; }
+  .card-top { display: flex; align-items: flex-start; gap: 6px; }
+  .grip { cursor: grab; color: #94a3b8; font-size: 14px; line-height: 1.1; user-select: none; padding: 0 2px 0 0; }
+  .grip:active { cursor: grabbing; }
+  .title { font-weight: 600; font-size: 12.5px; flex: 1; }
+  .title input {
+    width: 100%; font: 600 12.5px/1.3 inherit; border: none; border-bottom: 1px dashed #d97706;
+    background: transparent; color: inherit; outline: none;
+  }
+  .badge {
+    font: 700 9px/1 inherit; text-transform: uppercase; letter-spacing: .04em; padding: 3px 5px;
+    border-radius: 4px; white-space: nowrap;
+  }
+  .badge.kpi     { background: #ede9fe; color: #6d28d9; }
+  .badge.chart   { background: #dbeafe; color: #1d4ed8; }
+  .badge.table   { background: #dcfce7; color: #15803d; }
+  .badge.list    { background: #ccfbf1; color: #0f766e; }
+  .badge.panel   { background: #fef3c7; color: #b45309; }
+  .badge.control { background: #f1f5f9; color: #475569; border: 1px solid var(--line); }
+  .badge.idea    { background: #ffedd5; color: #c2410c; }
+  .xbtn {
+    border: none; background: none; color: #cbd5e1; font-size: 13px; cursor: pointer; padding: 0 1px; line-height: 1;
+  }
+  .xbtn:hover { color: #dc2626; }
+  .card .desc { color: var(--muted); font-size: 11.5px; margin-top: 3px; }
+  .card .cond { color: #b45309; font-size: 10.5px; font-style: italic; margin-top: 2px; }
+  .card .src { font-family: Consolas, monospace; font-size: 9.5px; color: #a3b0c2; margin-top: 3px; word-break: break-all; }
+  .card textarea.note {
+    width: 100%; margin-top: 5px; border: 1px dashed var(--line); border-radius: 5px; padding: 4px 6px;
+    font: italic 11.5px/1.4 inherit; color: #7c2d12; background: #fffdf7; resize: none; overflow: hidden;
+  }
+  .card textarea.note:placeholder-shown { background: #fcfcfc; }
+  .addidea {
+    border: 1px dashed #94a3b8; background: none; border-radius: 6px; color: var(--muted);
+    font: 600 11.5px/1 inherit; padding: 7px; cursor: pointer;
+  }
+  .addidea:hover { color: var(--blue); border-color: var(--blue); }
+
+  dialog#outDlg { border: 1px solid var(--line); border-radius: 10px; padding: 0; max-width: 760px; width: 90vw; }
+  dialog#outDlg::backdrop { background: rgba(15,23,42,.45); }
+  #outDlg .dhead { display: flex; align-items: center; gap: 10px; padding: 12px 16px; border-bottom: 1px solid var(--line); }
+  #outDlg .dhead b { flex: 1; }
+  #outDlg pre { margin: 0; padding: 14px 16px; max-height: 60vh; overflow: auto; font: 11.5px/1.5 Consolas, monospace; white-space: pre-wrap; }
+  #outDlg button { font: 600 12px/1 inherit; padding: 7px 11px; border-radius: 6px; border: 1px solid var(--blue); background: var(--blue); color: #fff; cursor: pointer; }
+  #outDlg button.ghost { background: #fff; color: var(--muted); border-color: var(--line); }
+</style>
+</head>
+<body>
+
+<header class="bar">
+  <h1>Front Desk Layout Board</h1>
+  <span class="hint">Drag cards (by the ⠿ grip) within or across pages · ✕ marks a block for removal · type comments on any card or page · everything autosaves in this browser. When you're done: <b>Copy brief for Claude</b> and paste it into the chat. Inventory as of 2026-08-30 · aa11415c.</span>
+  <span id="savedFlash">Saved ✓</span>
+  <button id="briefBtn">Copy brief for Claude</button>
+  <button id="jsonBtn" class="secondary">Copy raw JSON</button>
+  <button id="resetBtn" class="ghost">Reset to current app layout</button>
+</header>
+
+<main id="board"></main>
+
+<dialog id="outDlg">
+  <div class="dhead"><b id="dlgTitle"></b><button id="dlgCopy">Copy to clipboard</button><button class="ghost" id="dlgClose">Close</button></div>
+  <pre id="dlgPre"></pre>
+</dialog>
+
+<script>
+// ================= BASELINE — the app's current layout, generated from code =====================
+// One entry per layout surface (tabs that carry their own block stack count as surfaces).
+// Card ids are stable handles; briefs reference them, so never edit or reuse ids by hand.
+const BASELINE = [
+ {
+  "id": "qu",
+  "route": "/",
+  "title": "Queue",
+  "group": "Desk",
+  "blocks": [
+   {
+    "id": "qu1",
+    "title": "Scope + stat strip",
+    "type": "kpi",
+    "desc": "Acting-as scope with the four counts as ONE quiet line under the heading (no tiles): need filing, working queue, no owner, past target. Overdue derived at read time (QM-D15).",
+    "src": "app/page.tsx"
+   },
+   {
+    "id": "qu2",
+    "title": "Mailbox status strip",
+    "type": "control",
+    "desc": "One-line pipe status at the TOP of the queue (2026-08-24 — VK's review found 'is the mailbox even being read?' unanswerable with the old foot-of-page panel): health badge + last pass + who, linking to /mailbox where the detail and the Pull button now live.",
+    "src": "components/MailboxStrip.tsx"
+   },
+   {
+    "id": "qu3",
+    "title": "Coordinated-group banners",
+    "type": "panel",
+    "desc": "Clusters the evidence says were organised (identical subjects, pasted Subject: lines) with a Handle together → link into Patterns.",
+    "src": "app/page.tsx"
+   },
+   {
+    "id": "qu4",
+    "title": "Needs filing",
+    "type": "table",
+    "desc": "Unfiled arrivals with the classifier's suggestion + mandatory reason (AI-15). A human accepts/changes/parks — nothing auto-enters the working queue. Safeguarding subjects are MASKED here unless the actor holds the named grant.",
+    "src": "app/page.tsx"
+   },
+   {
+    "id": "qu5",
+    "title": "Triage bar",
+    "type": "control",
+    "desc": "Accept suggestion · change category · not-a-parent-request. Filing stamps the acknowledgement clock (QM-D12: filing, not capture) and derives seriousness for the two-person gate (QM-D10).",
+    "src": "components/TriageBar.tsx"
+   },
+   {
+    "id": "qu8",
+    "title": "Chases owed",
+    "type": "control",
+    "desc": "Items past their RESPONSE target, derived at read time (QM-D14/D15) — reference-only rows (no subject, no family), owner named because finding them is the job, one-line Log chase. Closing a chase never closes the item.",
+    "src": "app/(staff)/page.tsx"
+   },
+   {
+    "id": "qu6",
+    "title": "Working queue",
+    "type": "table",
+    "desc": "Open/waiting requests: channel, category, cluster chips, ack badge (awaiting first look / unseen past target), SLA badge, owner. Switchboard slips hideable. Safeguarding masked without the named grant.",
+    "src": "app/page.tsx"
+   },
+   {
+    "id": "qu7",
+    "title": "Filtered out",
+    "type": "panel",
+    "desc": "Vendor noise kept on record, out of the queue — the ~50%-solicitation finding made structural. Since 2026-08-24 each row shows the sender's raw address, so the 'not a known family' judgment is auditable at a glance.",
+    "src": "app/page.tsx"
+   }
+  ]
+ },
+ {
+  "id": "mb",
+  "route": "/mailbox",
+  "title": "Mailbox",
+  "group": "Desk",
+  "blocks": [
+   {
+    "id": "mb1",
+    "title": "Health card",
+    "type": "panel",
+    "desc": "The trust line, one sentence per state (demo · manual · unfiltered-refused · starting · healthy · down): is the desk mailbox being read, how fresh is this system, and the standing dedupe assurance. Automation fails CLOSED without a desk-mail filter — an unfiltered member-mailbox read would ingest someone's whole inbox.",
+    "src": "app/(staff)/mailbox/page.tsx"
+   },
+   {
+    "id": "mb2",
+    "title": "Mail source + Pull",
+    "type": "control",
+    "desc": "The Pull button's one home since 2026-08-24 (moved from the queue's foot). Live/demo badge, ready reason, and the pull result echo — every press also lands as a row in the passes table.",
+    "src": "components/SyncPanel.tsx"
+   },
+   {
+    "id": "mb3",
+    "title": "Recent passes",
+    "type": "table",
+    "desc": "Every ingestion pass, button or timer: when, run by whom, outcome (completed / failed / died mid-flight), fetched · new · joined-a-thread · parked. The 'new can exceed fetched' missed-call explosion is explained right under the table.",
+    "src": "app/(staff)/mailbox/page.tsx"
+   },
+   {
+    "id": "mb4",
+    "title": "The ledger",
+    "type": "table",
+    "desc": "One row per processed mailbox message, newest first: received · from (name + address) · subject · what became of it (Became a request / Joined its thread / Parked — vendor / Parked — automated / Already had it / Failed to process) with a live request link and Open-in-Gmail on real-source rows. Scoped like the queue (campus + QM-D33 suppression); safeguarding rows mask subject, identity and address in lockstep. Backfilled from pre-ledger requests.",
+    "src": "app/(staff)/mailbox/page.tsx"
+   }
+  ]
+ },
+ {
+  "id": "pt",
+  "route": "/patterns",
+  "title": "Patterns",
+  "group": "Desk",
+  "blocks": [
+   {
+    "id": "pt1",
+    "title": "Looks coordinated",
+    "type": "panel",
+    "desc": "Clusters with the evidence (shared subject, pasted-template count) and the answer-once guidance — the 7 July 2026 finding as a screen.",
+    "src": "app/patterns/page.tsx"
+   },
+   {
+    "id": "pt2",
+    "title": "Act on the whole cluster",
+    "type": "control",
+    "desc": "Note all / Assign all / Resolve all with a confirmation naming exactly how many members are touched and which are skipped (with reasons). One Activity per member; satisfaction never bulk-written (QM-D19/D18).",
+    "src": "components/ClusterActions.tsx"
+   },
+   {
+    "id": "pt3",
+    "title": "Topic bursts",
+    "type": "panel",
+    "desc": "Same subject-matter, different wording, close together — usually one decision of ours worth fixing at source.",
+    "src": "app/patterns/page.tsx"
+   }
+  ]
+ },
+ {
+  "id": "ov",
+  "route": "/oversight",
+  "title": "Oversight",
+  "group": "Leadership",
+  "blocks": [
+   {
+    "id": "ov7",
+    "title": "Tabs: Overview · By campus · Categories · Channels",
+    "type": "control",
+    "desc": "Everything stays, grouped so each visit answers one question at a time (VK, 2026-08-09). Overview carries the KPI strip, chase ladder, group submissions and repeat families; the other three tabs carry their named table/chart.",
+    "src": "app/(staff)/oversight/page.tsx"
+   },
+   {
+    "id": "ov1",
+    "title": "Group KPI strip",
+    "type": "kpi",
+    "desc": "Open, past target, no reply yet, families who came back — about requests, never about people (nobody is scored). Lives on the Overview tab.",
+    "src": "app/oversight/page.tsx"
+   },
+   {
+    "id": "ov6",
+    "title": "Chase ladder",
+    "type": "kpi",
+    "desc": "Owed right now + chased this week, framed as a diagnostic: a rising chase count is evidence the earlier rungs are failing — not desk workload (QM-D14). Lives on the Overview tab.",
+    "src": "app/(staff)/oversight/page.tsx"
+   },
+   {
+    "id": "ov3",
+    "title": "Group submissions",
+    "type": "panel",
+    "desc": "The QM-D19 counting rule rendered: one issue, N complainants — a cluster is never counted as N issues. Lives on the Overview tab.",
+    "src": "app/oversight/page.tsx"
+   },
+   {
+    "id": "ov2",
+    "title": "By campus table",
+    "type": "table",
+    "desc": "One row per campus, same system — no rebuild when the next campus joins. Lives on the By-campus tab.",
+    "src": "app/oversight/page.tsx"
+   },
+   {
+    "id": "ov4",
+    "title": "What parents write about",
+    "type": "chart",
+    "desc": "Category distribution — the thing worth fixing at source. Lives on the Categories tab.",
+    "src": "app/oversight/page.tsx"
+   },
+   {
+    "id": "ov5",
+    "title": "Seven doors",
+    "type": "chart",
+    "desc": "Volume by channel including the app rail (QM-D34). Lives on the Channels tab.",
+    "src": "app/oversight/page.tsx"
+   }
+  ]
+ },
+ {
+  "id": "my",
+  "route": "/my",
+  "title": "My work",
+  "group": "Desk",
+  "blocks": [
+   {
+    "id": "my1",
+    "title": "Stat strip",
+    "type": "kpi",
+    "desc": "The four buckets at a glance — awaiting your first look goes amber, deepred once any ack clock is overdue (read-time derived, QM-D15).",
+    "src": "app/my/page.tsx"
+   },
+   {
+    "id": "my2",
+    "title": "Awaiting your first look",
+    "type": "table",
+    "desc": "Owned, filed, nobody has looked — most overdue first. The QM-D12 clock made personal.",
+    "src": "app/my/page.tsx"
+   },
+   {
+    "id": "my3",
+    "title": "Open work",
+    "type": "table",
+    "desc": "Acknowledged and in progress, urgency then target. A complaint routed to you sits here as ordinary work (QM-D32) — no special section, no stigma. A complaint ABOUT you never appears at all (QM-D33).",
+    "src": "app/my/page.tsx"
+   },
+   {
+    "id": "my4",
+    "title": "Waiting on the family",
+    "type": "table",
+    "desc": "The next move is theirs; the reply clock shows where things stand.",
+    "src": "app/my/page.tsx"
+   },
+   {
+    "id": "my5",
+    "title": "Recently resolved",
+    "type": "table",
+    "desc": "Closed in the last seven days, then it drops off the stream.",
+    "src": "app/my/page.tsx"
+   },
+   {
+    "id": "my6",
+    "title": "Claimable in your scope",
+    "type": "table",
+    "desc": "Unowned queue items (QM-D31) rendered from the QM-D29 seven-field wire row, visually distinct from personal rows (dashed on cream). Claim rides the desk grant; safeguarding items are absent entirely — no row, never a masked title (QM-D30/R3-19).",
+    "src": "app/(staff)/my/page.tsx"
+   }
+  ]
+ },
+ {
+  "id": "lg",
+  "route": "/log",
+  "title": "Log a request",
+  "group": "Desk",
+  "blocks": [
+   {
+    "id": "lg1",
+    "title": "Quick log form",
+    "type": "control",
+    "desc": "Mirrors the desk's own Daily Call Log columns (caller relationship, received by, routed to, grade/section) so it feels like the sheet, not a new tool. Channels include app; switchboard slips flagged on the same record.",
+    "src": "components/QuickLog.tsx"
+   }
+  ]
+ },
+ {
+  "id": "hp",
+  "route": "/help",
+  "title": "Help",
+  "group": "Desk",
+  "blocks": [
+   {
+    "id": "hp1",
+    "title": "What this is",
+    "type": "panel",
+    "desc": "Two plain-language paragraphs and the seven doors — written for the desk team, no ruling numbers.",
+    "src": "app/(staff)/help/page.tsx"
+   },
+   {
+    "id": "hp2",
+    "title": "How it behaves",
+    "type": "panel",
+    "desc": "Six one-liner behaviour cards (nothing enters unfiled; the assistant only suggests; desk-open clock; closure gate; about-staff closure; safeguarding named-access).",
+    "src": "app/(staff)/help/page.tsx"
+   },
+   {
+    "id": "hp3",
+    "title": "What's new",
+    "type": "table",
+    "desc": "Dated newest-first changelog, kept in sync with the in-app NewBadge markers; entries age out when a feature is declared final.",
+    "src": "app/(staff)/help/page.tsx"
+   }
+  ]
+ },
+ {
+  "id": "fam",
+  "route": "/family",
+  "title": "My requests (parent face)",
+  "group": "Family",
+  "blocks": [
+   {
+    "id": "fam3",
+    "title": "Superseded-by pointer",
+    "type": "panel",
+    "desc": "Quiet banner: this screen is the proof-of-concept parent face - the Nucleus parent app is the family's front door now; requests raised there land on the same desk over the bridge (QM-D34(2)).",
+    "src": "app/(family)/family/page.tsx"
+   },
+   {
+    "id": "fam1",
+    "title": "My requests",
+    "type": "table",
+    "desc": "The family's own requests, newest first: subject, plain-language status, arrival date. No queue mechanics — the thread is the parent's face (QM-D34).",
+    "src": "app/(family)/family/page.tsx"
+   },
+   {
+    "id": "fam2",
+    "title": "Raise a request",
+    "type": "control",
+    "desc": "Deterministic category menu (SD-COM-3), subject, message, optional grade/section. No urgency field — a parent doesn't triage. Submission IS filing: both clocks start now (QM-D34(5)).",
+    "src": "components/FamilyNewRequest.tsx"
+   }
+  ]
+ },
+ {
+  "id": "fth",
+  "route": "/family/r/[ref]",
+  "title": "Family thread",
+  "group": "Family",
+  "blocks": [
+   {
+    "id": "fth1",
+    "title": "The conversation",
+    "type": "panel",
+    "desc": "Messages both ways; every outbound sender reads 'Front Office' (SD-COM-2 — threads belong to a role, not a person). No trail, no owner names, no internal machinery.",
+    "src": "app/(family)/family/r/[ref]/page.tsx"
+   },
+   {
+    "id": "fth2",
+    "title": "Write back / rate",
+    "type": "control",
+    "desc": "Reply while live (waiting flips back to open); on resolved-unrated, the 1–5 ask — QM-D18's rating from its natural home. A parked record refuses toward a fresh request.",
+    "src": "components/FamilyThreadActions.tsx"
+   }
+  ]
+ },
+ {
+  "id": "rd",
+  "route": "/r/[ref]",
+  "title": "Request record",
+  "group": "Desk",
+  "blocks": [
+   {
+    "id": "rd0",
+    "title": "Queue rail (split pane)",
+    "type": "list",
+    "desc": "The live queue alongside the open record at ≥1024px (DS §54 fh-split, v1.29 re-vendor): Needs-filing + Working-queue rows, current record highlighted, safeguarding subjects masked, about-actor rows suppressed. Rows are plain links — opening one files nothing. Hidden on phones (the record wins; full queue is one tap away).",
+    "src": "app/r/[ref]/_QueueRail.tsx"
+   },
+   {
+    "id": "rd1",
+    "title": "Header + clocks",
+    "type": "panel",
+    "desc": "Ref, campus, channel, arrival vs clock-start (desk-hours rule: 26% of parent mail lands before opening), family label. Out-of-scope and safeguarding-without-grant show a readable refusal, never a blank.",
+    "src": "app/r/[ref]/page.tsx"
+   },
+   {
+    "id": "rd2",
+    "title": "Recipient sprawl",
+    "type": "panel",
+    "desc": "Who the family actually wrote to — kept as evidence that copying several addresses makes ownership less likely.",
+    "src": "app/r/[ref]/page.tsx"
+   },
+   {
+    "id": "rd3",
+    "title": "Cluster membership",
+    "type": "panel",
+    "desc": "Sibling requests in the same coordinated group with a link to the whole pattern.",
+    "src": "app/r/[ref]/page.tsx"
+   },
+   {
+    "id": "rd4",
+    "title": "Suggestion + reason",
+    "type": "panel",
+    "desc": "What the assistant suggested and why — a suggestion only; it never files, replies, or closes (AI-13/15).",
+    "src": "app/r/[ref]/page.tsx"
+   },
+   {
+    "id": "rd5",
+    "title": "Conversation",
+    "type": "panel",
+    "desc": "Inbound/outbound messages with sender labels, never real addresses.",
+    "src": "app/r/[ref]/page.tsx"
+   },
+   {
+    "id": "rd6",
+    "title": "Second-look chip",
+    "type": "control",
+    "desc": "High-seriousness filings want approval from a DIFFERENT person (QM-D10) — a quiet chip, never a lock; the response is never gated on it.",
+    "src": "components/TriageSecondLook.tsx"
+   },
+   {
+    "id": "rd10",
+    "title": "File it (unfiled records)",
+    "type": "control",
+    "desc": "The record page offers filing when filing is the next act — the same Accept/Change/park bar as the queue, so reading the full message first never strands the operator on a page without the primary action (2026-08-09 review).",
+    "src": "components/TriageBar.tsx"
+   },
+   {
+    "id": "rd7",
+    "title": "Actions: acknowledge · owner · reply · closure",
+    "type": "control",
+    "desc": "Rendered only once FILED: an unfiled record shows the File-it block instead, and the actions layer refuses reply/resolve on unfiled regardless (core/lifecycle.ts). Mark-as-seen stops the ack clock (set once — the metric reads the FIRST look). Closing requires the family's rating OR a coded absence reason (QM-D18); switchboard slips are exempt. Reopen for resolved.",
+    "src": "components/RequestActions.tsx"
+   },
+   {
+    "id": "rd8",
+    "title": "The trail",
+    "type": "table",
+    "desc": "Every act after filing lands on the record, not in email (R3-18 ext ¶3): filed, classified, acknowledged, assigned, replied, triage-approved, resolved, reopened, cluster notes, conversations held.",
+    "src": "app/r/[ref]/page.tsx"
+   },
+   {
+    "id": "rd9",
+    "title": "Concerns a member of staff",
+    "type": "control",
+    "desc": "Name the staff a complaint is ABOUT — they leave the record's audience entirely (QM-D33; even oversight), the queue suppresses their row, and the substance reaches them through a conversation recorded here as a 'Conversation held' leg. Never accrues per person (QM-D16(c)).",
+    "src": "components/AboutStaff.tsx"
+   }
+  ]
+ }
+];
+
+// ================= state ========================================================================
+const LS_KEY = 'layout-board-front-desk-v1';
+const LEGACY_KEY = ''; // pre-namespacing key to adopt once, '' when none
+const blockById = {}; const homeOf = {}; const pageById = {};
+BASELINE.forEach(p => { pageById[p.id] = p; p.blocks.forEach(b => { blockById[b.id] = b; homeOf[b.id] = p.id; }); });
+
+function defaultState() {
+  return { order: Object.fromEntries(BASELINE.map(p => [p.id, p.blocks.map(b => b.id)])),
+           removed: {}, comments: {}, pageComments: {}, ideas: {} };
+}
+function loadState() {
+  let s;
+  try {
+    let raw = localStorage.getItem(LS_KEY);
+    if (!raw && LEGACY_KEY) raw = localStorage.getItem(LEGACY_KEY);
+    s = JSON.parse(raw);
+  } catch (e) { s = null; }
+  if (!s || !s.order) return defaultState();
+  s.removed = s.removed || {}; s.comments = s.comments || {}; s.pageComments = s.pageComments || {}; s.ideas = s.ideas || {};
+  // Reconcile with the (possibly updated) baseline: keep known + idea ids, dedupe, append new blocks to their home page.
+  const seen = new Set();
+  for (const p of BASELINE) {
+    s.order[p.id] = (s.order[p.id] || []).filter(id => {
+      const known = blockById[id] || s.ideas[id];
+      if (!known || seen.has(id)) return false;
+      seen.add(id); return true;
+    });
+  }
+  const orphanIdeas = [];
+  for (const k of Object.keys(s.order)) if (!pageById[k]) {
+    // a page dropped from a future baseline: salvage the user's idea cards, never lose their words
+    for (const id of s.order[k]) if (id.startsWith('idea-') && s.ideas[id] && !seen.has(id)) { seen.add(id); orphanIdeas.push(id); }
+    delete s.order[k];
+  }
+  for (const p of BASELINE) {
+    s.order[p.id] = s.order[p.id] || [];
+    // blocks new in this baseline slot in at their baseline position (after the nearest surviving
+    // predecessor), so a page the user never touched still reads "unchanged" in the brief
+    p.blocks.forEach((b, bi) => {
+      if (seen.has(b.id)) return;
+      let at = 0;
+      for (let j = bi - 1; j >= 0; j--) {
+        const k = s.order[p.id].indexOf(p.blocks[j].id);
+        if (k !== -1) { at = k + 1; break; }
+      }
+      s.order[p.id].splice(at, 0, b.id);
+      seen.add(b.id);
+    });
+  }
+  if (orphanIdeas.length) s.order[BASELINE[0].id].push(...orphanIdeas);
+  return s;
+}
+let state = loadState();
+let saveTimer = null;
+function save() {
+  localStorage.setItem(LS_KEY, JSON.stringify(state));
+  const f = document.getElementById('savedFlash');
+  f.classList.add('on');
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(() => f.classList.remove('on'), 1200);
+}
+
+// ================= render =======================================================================
+const board = document.getElementById('board');
+function autoGrow(t) { t.style.height = 'auto'; t.style.height = (t.scrollHeight + 2) + 'px'; }
+
+function render() {
+  board.innerHTML = '';
+  const groups = [];
+  BASELINE.forEach(p => { if (!groups.includes(p.group)) groups.push(p.group); });
+  for (const g of groups) {
+    const sec = document.createElement('section'); sec.className = 'group';
+    const h = document.createElement('h2'); h.textContent = g; sec.appendChild(h);
+    const cols = document.createElement('div'); cols.className = 'columns';
+    for (const p of BASELINE.filter(x => x.group === g)) cols.appendChild(renderColumn(p));
+    sec.appendChild(cols);
+    board.appendChild(sec);
+  }
+  document.querySelectorAll('textarea').forEach(autoGrow);
+}
+
+function renderColumn(p) {
+  const col = document.createElement('div'); col.className = 'col'; col.dataset.page = p.id;
+  const head = document.createElement('div'); head.className = 'col-head';
+  head.innerHTML = '<span class="t"></span><span class="route"></span><span class="n"></span>';
+  head.querySelector('.t').textContent = p.title;
+  head.querySelector('.route').textContent = p.route;
+  col.appendChild(head);
+
+  const note = document.createElement('textarea');
+  note.className = 'pagenote'; note.rows = 1; note.placeholder = 'Page comment…';
+  note.value = state.pageComments[p.id] || '';
+  note.addEventListener('input', () => { state.pageComments[p.id] = note.value; autoGrow(note); save(); });
+  col.appendChild(note);
+
+  const cards = document.createElement('div'); cards.className = 'cards'; cards.dataset.page = p.id;
+  for (const id of state.order[p.id]) cards.appendChild(renderCard(id));
+  wireContainer(cards, col);
+  col.appendChild(cards);
+
+  const add = document.createElement('button'); add.className = 'addidea'; add.textContent = '+ Add idea card';
+  add.addEventListener('click', () => {
+    let n = 1; while (state.ideas['idea-' + n]) n++;
+    const id = 'idea-' + n;
+    state.ideas[id] = { title: '', note: '' };
+    state.order[p.id].push(id);
+    cards.appendChild(renderCard(id));
+    updateCounts(); save();
+    cards.lastChild.querySelector('input')?.focus();
+  });
+  col.appendChild(add);
+  return col;
+}
+
+function renderCard(id) {
+  const isIdea = id.startsWith('idea-');
+  const b = isIdea ? state.ideas[id] : blockById[id];
+  const card = document.createElement('div');
+  card.className = 'card' + (isIdea ? ' idea' : '') + (state.removed[id] ? ' removed' : '');
+  card.dataset.id = id;
+
+  const top = document.createElement('div'); top.className = 'card-top';
+  const grip = document.createElement('span'); grip.className = 'grip'; grip.textContent = '⠿'; grip.title = 'Drag to move';
+  // Drag only from the grip, so text in the card stays selectable/editable.
+  grip.addEventListener('mousedown', () => { card.draggable = true; });
+  card.addEventListener('dragend', () => { card.draggable = false; });
+  top.appendChild(grip);
+
+  const title = document.createElement('span'); title.className = 'title';
+  if (isIdea) {
+    const inp = document.createElement('input'); inp.placeholder = 'New block idea…'; inp.value = b.title;
+    inp.addEventListener('input', () => { b.title = inp.value; save(); });
+    title.appendChild(inp);
+  } else title.textContent = b.title;
+  top.appendChild(title);
+
+  const badge = document.createElement('span');
+  badge.className = 'badge ' + (isIdea ? 'idea' : b.type);
+  badge.textContent = isIdea ? 'idea' : b.type;
+  top.appendChild(badge);
+
+  const x = document.createElement('button'); x.className = 'xbtn';
+  x.textContent = state.removed[id] ? '↺' : '✕';
+  x.title = state.removed[id] ? 'Restore' : (isIdea ? 'Delete idea' : 'Mark for removal');
+  x.addEventListener('click', () => {
+    if (isIdea) { // ideas are simply deleted
+      delete state.ideas[id]; delete state.comments[id];
+      for (const k of Object.keys(state.order)) state.order[k] = state.order[k].filter(i => i !== id);
+      card.remove(); updateCounts(); save(); return;
+    }
+    state.removed[id] = !state.removed[id];
+    if (!state.removed[id]) delete state.removed[id];
+    card.classList.toggle('removed', !!state.removed[id]);
+    x.textContent = state.removed[id] ? '↺' : '✕';
+    x.title = state.removed[id] ? 'Restore' : 'Mark for removal';
+    updateCounts(); save();
+  });
+  top.appendChild(x);
+  card.appendChild(top);
+
+  if (!isIdea) {
+    const d = document.createElement('div'); d.className = 'desc'; d.textContent = b.desc; card.appendChild(d);
+    if (b.cond) { const c = document.createElement('div'); c.className = 'cond'; c.textContent = 'shows: ' + b.cond; card.appendChild(c); }
+    const s = document.createElement('div'); s.className = 'src'; s.textContent = b.src; card.appendChild(s);
+  }
+
+  const note = document.createElement('textarea');
+  note.className = 'note'; note.rows = 1; note.placeholder = isIdea ? 'Describe the idea…' : 'Comment…';
+  note.value = isIdea ? (b.note || '') : (state.comments[id] || '');
+  note.addEventListener('input', () => {
+    if (isIdea) b.note = note.value; else state.comments[id] = note.value;
+    autoGrow(note); save();
+  });
+  card.appendChild(note);
+  return card;
+}
+
+// ================= drag & drop ==================================================================
+let dragged = null, dragOrigin = null;
+document.addEventListener('dragstart', (e) => {
+  const card = e.target.closest ? e.target.closest('.card') : null;
+  // Only grip-armed drags count — dragging a TEXT SELECTION also fires dragstart and must not move the card.
+  if (!card || card.draggable !== true) return;
+  dragOrigin = { parent: card.parentElement, next: card.nextSibling };
+  dragged = card; card.classList.add('dragging');
+  e.dataTransfer.effectAllowed = 'move';
+  try { e.dataTransfer.setData('text/plain', card.dataset.id); } catch (err) {}
+});
+document.addEventListener('dragend', (e) => {
+  if (!dragged) return;
+  // A cancelled drag (Esc, or released over a non-drop area) reverts — it must not commit the hover position.
+  if (e.dataTransfer && e.dataTransfer.dropEffect === 'none' && dragOrigin && dragOrigin.parent) {
+    dragOrigin.parent.insertBefore(dragged, dragOrigin.next);
+  }
+  dragged.classList.remove('dragging');
+  dragged = null; dragOrigin = null;
+  document.querySelectorAll('.col.dragover').forEach(c => c.classList.remove('dragover'));
+  syncFromDom();
+});
+// If a grip mousedown never becomes a drag, disarm — otherwise text selection on that card stays broken.
+document.addEventListener('mouseup', () => {
+  document.querySelectorAll('.card[draggable="true"]').forEach(c => { c.draggable = false; });
+});
+
+function wireContainer(cards, col) {
+  cards.addEventListener('dragover', (e) => {
+    if (!dragged) return;
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    col.classList.add('dragover');
+    const after = [...cards.querySelectorAll('.card:not(.dragging)')]
+      .find(el => e.clientY < el.getBoundingClientRect().top + el.getBoundingClientRect().height / 2) || null;
+    if (after === dragged.nextSibling && after !== null) return;
+    if (after == null) { if (cards.lastChild !== dragged) cards.appendChild(dragged); }
+    else if (after !== dragged) cards.insertBefore(dragged, after);
+  });
+  cards.addEventListener('dragleave', () => col.classList.remove('dragover'));
+  cards.addEventListener('drop', (e) => { e.preventDefault(); col.classList.remove('dragover'); });
+}
+
+function syncFromDom() {
+  document.querySelectorAll('.cards').forEach(c => {
+    state.order[c.dataset.page] = [...c.children].map(el => el.dataset.id);
+  });
+  updateCounts(); save();
+}
+function updateCounts() {
+  document.querySelectorAll('.col').forEach(col => {
+    const n = col.querySelectorAll('.card:not(.removed)').length;
+    col.querySelector('.col-head .n').textContent = n + ' block' + (n === 1 ? '' : 's');
+  });
+}
+
+// ================= brief generation =============================================================
+// "Moved" flags use a longest-increasing-subsequence over baseline positions so one dragged card
+// doesn't mark every card below it as moved.
+function lisKeep(nums) {
+  const n = nums.length, len = Array(n).fill(1), prev = Array(n).fill(-1);
+  let best = 0;
+  for (let i = 1; i < n; i++) for (let j = 0; j < i; j++)
+    if (nums[j] < nums[i] && len[j] + 1 > len[i]) { len[i] = len[j] + 1; prev[i] = j; }
+  for (let i = 1; i < n; i++) if (len[i] > len[best]) best = i;
+  const keep = new Set();
+  for (let i = best; i >= 0; i = prev[i]) { keep.add(i); if (prev[i] === -1) break; }
+  return keep;
+}
+
+function buildBrief() {
+  const L = [];
+  L.push('LAYOUT BOARD BRIEF (front-desk) — ' + new Date().toISOString().slice(0, 10));
+  L.push('Baseline: inventory of 2026-08-30 · aa11415c (tools/layout-board/baselines/front-desk.json).');
+  L.push('Notation: card ids in [brackets] map to that baseline file.');
+  L.push('');
+  let changed = 0;
+  for (const p of BASELINE) {
+    const cur = state.order[p.id];
+    const base = p.blocks.map(b => b.id);
+    const active = cur.filter(id => !state.removed[id]);
+    const removedHere = cur.filter(id => state.removed[id]);
+    const cardNotes = cur.filter(id => (state.comments[id] || (state.ideas[id] && state.ideas[id].note) || '').trim());
+    const pageNote = (state.pageComments[p.id] || '').trim();
+    const sameSeq = cur.length === base.length && cur.every((id, i) => id === base[i]);
+    if (sameSeq && !removedHere.length && !cardNotes.length && !pageNote) {
+      L.push('· ' + p.title + ' (' + p.route + '): unchanged'); continue;
+    }
+    changed++;
+    L.push('PAGE: ' + p.title + ' (' + p.route + ')');
+    if (pageNote) L.push('  Page note: "' + pageNote + '"');
+    // moved-flag computation among retained home cards
+    const homeIdx = {}; base.forEach((id, i) => homeIdx[id] = i);
+    const homeCards = active.filter(id => homeOf[id] === p.id);
+    const keep = lisKeep(homeCards.map(id => homeIdx[id]));
+    const movedSet = new Set(homeCards.filter((id, i) => !keep.has(i)));
+    L.push('  New order:');
+    active.forEach((id, i) => {
+      const isIdea = id.startsWith('idea-');
+      const t = isIdea ? ((state.ideas[id].title || '(untitled idea)')) : blockById[id].title;
+      let flag = '';
+      if (isIdea) flag = '  [NEW IDEA]';
+      else if (homeOf[id] !== p.id) flag = '  ← from ' + pageById[homeOf[id]].title + ' [' + id + ']';
+      else if (movedSet.has(id)) flag = '  ← was #' + (homeIdx[id] + 1) + ' here';
+      L.push('   ' + String(i + 1).padStart(2) + '. ' + t + flag);
+      const note = (isIdea ? state.ideas[id].note : state.comments[id]) || '';
+      if (note.trim()) L.push('       » "' + note.trim().replace(/\n/g, ' / ') + '"');
+    });
+    if (removedHere.length) {
+      L.push('  REMOVE:');
+      for (const id of removedHere) {
+        const note = (state.comments[id] || '').trim();
+        L.push('   - ' + blockById[id].title + ' [' + id + ']' + (note ? ' » "' + note.replace(/\n/g, ' / ') + '"' : ''));
+      }
+    }
+    L.push('');
+  }
+  L.push('');
+  L.push(changed ? '(' + changed + ' page(s) changed. Cards not mentioned keep their current implementation — this brief is about placement/ordering + the comments above.)'
+                 : '(No changes marked yet — drag cards or add comments, then copy again.)');
+  return L.join('\n');
+}
+
+// ================= header actions ===============================================================
+const dlg = document.getElementById('outDlg'), dlgPre = document.getElementById('dlgPre'), dlgTitle = document.getElementById('dlgTitle');
+function legacyCopy(text) {
+  const host = dlg.open ? dlg : document.body; // body is inert while the modal is open
+  const ta = document.createElement('textarea'); ta.value = text; host.appendChild(ta);
+  ta.select(); let ok = false; try { ok = document.execCommand('copy'); } catch (e) {} ta.remove();
+  return ok;
+}
+function copyText(text) {
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    return navigator.clipboard.writeText(text).then(() => true, () => legacyCopy(text));
+  }
+  return Promise.resolve(legacyCopy(text));
+}
+function showOut(title, text) {
+  dlgTitle.textContent = title + ' — copying…'; dlgPre.textContent = text;
+  const done = copyText(text); // legacy path runs before the modal opens (body not yet inert)
+  dlg.showModal();
+  done.then((ok) => {
+    dlgTitle.textContent = title + (ok ? ' — copied to clipboard' : ' — auto-copy failed: select the text below and copy');
+  });
+}
+document.getElementById('briefBtn').addEventListener('click', () => showOut('Brief for Claude', buildBrief()));
+document.getElementById('jsonBtn').addEventListener('click', () =>
+  showOut('Raw board state', JSON.stringify({ app: 'front-desk', generated: new Date().toISOString(), baseline: '2026-08-30 · aa11415c', state }, null, 2)));
+document.getElementById('dlgCopy').addEventListener('click', (e) =>
+  copyText(dlgPre.textContent).then((ok) => { e.target.textContent = ok ? 'Copied ✓' : 'Copy failed — select manually'; }));
+document.getElementById('resetBtn').addEventListener('click', () => {
+  if (!confirm('Reset the board to the app’s current layout? Your moves, removals, ideas and comments will be cleared.')) return;
+  localStorage.removeItem(LS_KEY);
+  if (LEGACY_KEY) localStorage.removeItem(LEGACY_KEY);
+  state = defaultState();
+  render(); updateCounts(); save();
+});
+
+render(); updateCounts();
+</script>
+</body>
+</html>

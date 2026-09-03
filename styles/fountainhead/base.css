@@ -1,0 +1,203 @@
+/* ==========================================================================
+   Fountainhead Design System — Base
+   Modern reset + sensible element defaults + the brand typographic baseline.
+   Reads only semantic tokens from tokens.css.
+   ========================================================================== */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+* {
+  margin: 0;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  tab-size: 4;
+}
+
+body {
+  min-height: 100vh;
+  font-family: var(--fh-font-body);
+  font-size: var(--fh-text-base);
+  font-weight: var(--fh-weight-regular);
+  line-height: var(--fh-leading-normal);
+  color: var(--fh-color-text);
+  background-color: var(--fh-color-bg);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Respect the active theme for native form controls / scrollbars */
+:root { color-scheme: light; }
+[data-theme="dark"] { color-scheme: dark; }
+
+img,
+picture,
+svg,
+video,
+canvas {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+input,
+button,
+textarea,
+select {
+  font: inherit;
+  color: inherit;
+}
+
+button {
+  cursor: pointer;
+  background: none;
+  border: none;
+}
+
+a {
+  color: var(--fh-color-text-link);
+  text-decoration: none;
+}
+a:hover { text-decoration: underline; }
+
+p,
+li {
+  text-wrap: pretty;
+}
+
+ul, ol {
+  padding-left: var(--fh-space-5);
+}
+
+hr {
+  border: none;
+  border-top: var(--fh-border-width) solid var(--fh-color-border);
+  margin-block: var(--fh-space-6);
+}
+
+code,
+kbd,
+samp,
+pre {
+  font-family: var(--fh-font-mono);
+  font-size: 0.9em;
+}
+
+:focus-visible {
+  outline: 2px solid var(--fh-color-focus);
+  outline-offset: 2px;
+}
+
+::selection {
+  background: var(--fh-color-primary-subtle);
+  color: var(--fh-color-primary-subtle-fg);
+}
+
+::placeholder {
+  color: var(--fh-color-field-placeholder);
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Typographic baseline (the brand hierarchy)
+   Headings: Montserrat Bold.  Subheads: Montserrat Medium, all-caps, tracked.
+   Body: Nunito Regular.
+   -------------------------------------------------------------------------- */
+
+h1, h2, h3, h4, h5, h6,
+.fh-h1, .fh-h2, .fh-h3, .fh-h4, .fh-h5, .fh-h6 {
+  font-family: var(--fh-font-heading);
+  font-weight: var(--fh-weight-bold);
+  line-height: var(--fh-leading-tight);
+  letter-spacing: var(--fh-tracking-tight);
+  color: var(--fh-color-text);
+  text-wrap: balance;
+}
+
+h1, .fh-h1 { font-size: var(--fh-text-5xl); }   /* 42 — brand heading */
+h2, .fh-h2 { font-size: var(--fh-text-4xl); }   /* 36 */
+h3, .fh-h3 { font-size: var(--fh-text-3xl); }   /* 30 */
+h4, .fh-h4 { font-size: var(--fh-text-2xl); }   /* 24 */
+h5, .fh-h5 { font-size: var(--fh-text-xl); }    /* 21 */
+h6, .fh-h6 { font-size: var(--fh-text-lg); }    /* 18 */
+
+/* Subhead — Montserrat Medium, uppercase, per the brand hierarchy */
+.fh-subhead {
+  font-family: var(--fh-font-heading);
+  font-weight: var(--fh-weight-medium);
+  font-size: var(--fh-text-xl);
+  line-height: var(--fh-leading-snug);
+  letter-spacing: var(--fh-tracking-wide);
+  text-transform: uppercase;
+  color: var(--fh-color-text);
+}
+
+/* Display — oversized hero heading for the website */
+.fh-display {
+  font-family: var(--fh-font-heading);
+  font-weight: var(--fh-weight-extrabold);
+  font-size: var(--fh-text-6xl);
+  line-height: var(--fh-leading-none);
+  letter-spacing: var(--fh-tracking-tight);
+}
+
+.fh-lead {
+  font-size: var(--fh-text-lg);
+  line-height: var(--fh-leading-relaxed);
+  color: var(--fh-color-text-muted);
+}
+
+.fh-eyebrow {
+  font-family: var(--fh-font-heading);
+  font-weight: var(--fh-weight-semibold);
+  font-size: var(--fh-text-sm);
+  letter-spacing: var(--fh-tracking-wider);
+  text-transform: uppercase;
+  color: var(--fh-color-primary-text);
+}
+
+small, .fh-small {
+  font-size: var(--fh-text-sm);
+}
+.fh-caption {
+  font-size: var(--fh-text-xs);
+  color: var(--fh-color-text-muted);
+}
+
+/* Prose measure — running text never spans a full app region. Wrap any intro,
+   callout body, or explainer; layout containers stay full-width, the TEXT caps. */
+.fh-prose { max-width: var(--fh-measure); }
+.fh-prose--narrow { max-width: var(--fh-measure-narrow); }
+
+p { line-height: var(--fh-leading-normal); }
+strong, b { font-weight: var(--fh-weight-bold); }
+
+mark {
+  background: var(--fh-color-accent-subtle);
+  color: var(--fh-color-accent-subtle-fg);
+  padding: 0 0.2em;
+  border-radius: var(--fh-radius-xs);
+}
+
+/* Product/ERP profile: tabular figures so numbers and dates align in columns. */
+[data-profile="product"] body {
+  font-variant-numeric: tabular-nums;
+}

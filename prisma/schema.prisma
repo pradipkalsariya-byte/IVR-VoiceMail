@@ -1,0 +1,592 @@
+// Front Desk Request System — proof-of-concept schema.
+//
+// Shape follows R3-18 (the locked complaints/grievance spine) so it ports into Nucleus:
+// raise -> triage -> escalate -> resolve -> visible-status, with an owner, an SLA clock, an
+// action trail and audit. Campuses are ORG UNITS under one GROUP root (group-first tenancy,
+// D1) — never a tenant_id column and never a per-campus database.
+//
+// SYNTHETIC DATA ONLY. `Family` is a fabricated stand-in shaped like the real corpus; no real
+// parent, child or staff record is stored. See README.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+/// GROUP root + CAMPUS children. Scope cascades down the tree.
+model OrgUnit {
+  id       String    @id
+  parentId String?
+  parent   OrgUnit?  @relation("tree", fields: [parentId], references: [id])
+  children OrgUnit[] @relation("tree")
+  type     String // GROUP | CAMPUS
+  code     String    @unique // fsk | fwgs | fsm | falh | group
+  name     String
+
+  staff    Staff[]
+  families Family[]
+  requests Request[]
+  clusters Cluster[]
+  rosterDays    RosterDay[]
+  categoryRoutes CategoryRoute[]
+}
+
+/// A demo actor. `scopeOrgUnitId` is the node whose subtree they can see — a GROUP-scoped
+/// posting sees every campus, which is how central oversight works without a separate app.
+model Staff {
+  id             String  @id
+  email          String  @unique
+  name           String
+  roleLabel      String // Front Desk · Campus Lead · Head of School · Founder · Transport Operator
+  scopeOrgUnitId String
+  scope          OrgUnit @relation(fields: [scopeOrgUnitId], references: [id])
+  /// DEPRECATED as an access check — reads/writes go through `permissions` (core/permissions.ts)
+  /// since 2026-08-07, mirroring how the target estate resolves capability from role + scope
+  /// rather than a boolean. Kept only as seed-data shorthand for granting the oversight set.
+  isLeadership   Boolean @default(false)
+  /// An outsourced vendor owner (R3-23) — can own a request without being school staff.
+  isVendor       Boolean @default(false)
+  /// Capability grants, e.g. ["oversight", "triage_approve", "assign"]. Deliberately a coarse
+  /// string list, not a policy engine — this prototype proves the SHAPE (capability checked per
+  /// action, scoped by org unit), and graduates into `can(world, query)` in the main repo.
+  permissions    String[] @default([])
+
+  owned          Request[] @relation("owner")
+  received       Request[] @relation("receivedBy")
+  routed         Request[] @relation("routedTo")
+  triageApproved Request[] @relation("triageApprovedBy")
+  activities     Activity[]
+  chasesClosed   Chase[]   @relation("chaseClosedBy")
+  ingestRuns     IngestRun[]
+  /// Access changes this person MADE (feedback #34). Not changes made to them.
+  accessChanges AccessChange[] @relation("accessChangeActor")
+  /// Campuses this person may work in (27-Aug-2026). Authorisation reads THESE, not
+  /// scopeOrgUnitId, which is kept for one release so the backfill can be audited.
+  campusGrants StaffCampus[]
+  /// Days this person is on the desk (feedback #21).
+  rosterDays RosterDay[] @relation("rosterStaff")
+  /// Categories routed to this person by default (feedback #18).
+  routes CategoryRoute[] @relation("routeStaff")
+  /// Set while someone has marked themselves away (feedback #20). Their live work is
+  /// returned to the pool rather than waiting for a timer to notice. Null = available.
+  awayUntil DateTime?
+}
+
+/// Family stand-in, linked to an inbound sender's email. Dedup keys mirror the admissions
+/// core: phone is the family key.
+model Family {
+  id       String @id
+  /// Seed/demo rows: "Family 41", never a real name. Real rows (2026-08-12: imported from
+  /// career-counselling's roster, itself sourced from legacy Nucleus with VK's own
+  /// privacy-boundary review) carry an addressable label like "Parent of Aarav Shah" — real,
+  /// because the school-issued parent alias it derives from already cleared that review once.
+  label           String
+  emailKey        String    @unique
+  campusOrgUnitId String
+  campus          OrgUnit   @relation(fields: [campusOrgUnitId], references: [id])
+  requests        Request[]
+  phones          FamilyPhone[]
+}
+
+/// One row per real number a family answers to. NOT a single Family.phoneKey (2026-08-12: the
+/// first real phone data showed father's and mother's mobiles genuinely differ per family — a
+/// single scalar would recognise calls from only one parent, silently missing the other).
+model FamilyPhone {
+  id       String @id
+  familyId String
+  family   Family @relation(fields: [familyId], references: [id], onDelete: Cascade)
+  phoneKey String // last-10-digits form
+  /// "Father" / "Mother" / etc, when the source names it. Display/audit only — matching never
+  /// depends on it.
+  label    String?
+
+  @@unique([familyId, phoneKey])
+  @@index([phoneKey])
+}
+
+/// The one record every channel produces.
+model Request {
+  id  String @id
+  ref String @unique // FD-0001, shown to staff and quotable to a parent
+
+  /// email | call | whatsapp | walkin | staff | event | app
+  /// `app` added per QM-D34 (2026-08-07): the locked in-app conversation rail (SD-COM-3) is the
+  /// PRIMARY parent surface, not an addition — and inbound email has no locked capability grant
+  /// anywhere in the estate. It arrives pre-routed (the parent picks a category from a
+  /// deterministic menu), so per QM-D34(5) submission IS filing on this channel.
+  channel         String
+  campusOrgUnitId String
+  campus          OrgUnit @relation(fields: [campusOrgUnitId], references: [id])
+  familyId        String?
+  family          Family? @relation(fields: [familyId], references: [id])
+
+  subject String
+  body    String
+  /// Where the parent actually sent it — the recipient-sprawl finding, kept as evidence.
+  originalRecipients String[]
+  /// The raw From: address on an email-channel message. Null on every other channel. Added
+  /// 2026-08-12 alongside the roster/name-guess work: this is the one place the sender's actual
+  /// address survives structurally — Family linking still goes through Family.emailKey, this is
+  /// only for the display-name guess and any future reply-address use.
+  senderEmail String?
+
+  // --- fields the desk already records in its Daily Call Log spreadsheet -----------------
+  // 636 rows / 28 days of real logging discipline. The form mirrors these columns so it feels
+  // like the sheet the team already fills in, rather than something new to learn.
+
+  /// Who was on the phone. Real distribution: mother 52%, other 29%, father 11%, then
+  /// alumni / vendor / student. Note a third of callers are NOT a guardian.
+  callerRelationship String?
+
+  /// Who TOOK the call. Distinct from `ownerId` — the sheet shows four people take every call
+  /// (Ayushi 52%, Prapti 36%, Smita 8%, Rashida 2%) but route onward to ~40 others.
+  receivedById String?
+  receivedBy   Staff?  @relation("receivedBy", fields: [receivedById], references: [id])
+
+  /// "Message passed to". Resolved to a real person where possible; the free-text label is kept
+  /// because the sheet's 148 distinct values include departments ("HRT"), honorifics
+  /// ("Sunera Ma'am") and "Self" — and the same person appears under several spellings.
+  routedToId    String?
+  routedTo      Staff?  @relation("routedTo", fields: [routedToId], references: [id])
+  routedToLabel String?
+
+  /// Grade/section of the child concerned. Blank in ~40% of the sheet's rows, and dirty when
+  /// present (`#REF!`, `Grade  12`, three spellings of alumni) — a dropdown fixes both.
+  grade   String?
+  section String?
+
+  /// 48% of logged calls are "connect me to Ms X" or "ask her to call me back" — switchboard
+  /// traffic, not a request with substance. Modelled on the SAME record and lifecycle (owner
+  /// decision), but flagged so the working queue can be viewed without callback slips.
+  isSwitchboard Boolean @default(false)
+
+  // --- ingestion provenance -------------------------------------------------------------
+  /// The source system's message id (Gmail's RFC822 Message-ID). UNIQUE, and the whole reason
+  /// polling can run repeatedly without creating duplicates.
+  sourceMessageId String? @unique
+  /// The source system's thread id. A reply joins the existing Request instead of opening a
+  /// new one — essential given real threads run to hundreds of messages.
+  sourceThreadId  String?
+
+  /// Who sent it, per core/senders.ts: machine | parent | student | alumnus | staff | external.
+  /// `alumnus` added per QM-D40 (2026-08-07). It is NOT a student: no enrolment, no guardian to
+  /// notify, no campus by posting — so anything keyed on those is wrong for them. Their traffic is
+  /// disproportionately certificate requests (the EXC-5 alumni path). Before this existed, an
+  /// a<year>. sender was filed as a current student, and an s. sender as STAFF.
+  senderKind String?
+  /// Sent by one of the school's OWN systems. 57% of the real FSK archive. Kept on record but
+  /// out of the working queue — this flag is what makes "60% of the desk's inbox could stop
+  /// existing" true rather than aspirational.
+  isAutomated Boolean @default(false)
+
+  arrivedAt DateTime
+  /// When the response clock starts. Not arrivedAt: 26% of parent mail lands 06:00-09:00 IST
+  /// before the desk opens, so the clock starts at desk-open (see core/sla.ts).
+  clockStartsAt DateTime
+
+  // --- triage -------------------------------------------------------------------------
+  category String? // null until a human confirms
+  urgency  String  @default("normal") // low | normal | high | critical
+  status   String  @default("unfiled") // unfiled | open | waiting | resolved | not_a_request
+
+  /// Classifier output. Advisory only — a human confirms. The reason is mandatory (AI-15).
+  suggestedCategory String?
+  suggestedUrgency  String?
+  suggestionReason  String?
+  isVendorNoise     Boolean @default(false)
+
+  /// A suggested reply the desk can edit and send THEMSELVES (core/draft-reply.ts). Never sent
+  /// by the app -- there is no send path, which suits the scope: it saves typing, a person still
+  /// presses send. Null means none was offered, which for safeguarding is deliberate.
+  draftReply   String?
+  draftReplyAt DateTime?
+
+  /// When the model second pass read this message (lib/refine.ts). Set whatever the outcome,
+  /// including a fallback answer -- it marks "already considered", not "successfully improved",
+  /// so one message is never paid for twice to get the same result back.
+  modelClassifiedAt DateTime?
+
+  ownerId String?
+  owner   Staff?  @relation("owner", fields: [ownerId], references: [id])
+
+  // --- the two clocks (QM-D12, QM-D34) --------------------------------------------------
+  // NOTE what is deliberately ABSENT: there is no `isOverdue` column anywhere. Per QM-D15
+  // overdue is DERIVED at read time from `now` against the stored target, so every list stays
+  // correct even if the scheduler has never run. A stored flag would make a scheduler outage
+  // silent, which is the failure that ruling exists to prevent.
+
+  /// The RESPONSE target. Per QM-D34 this consumes SD-COM-11's already-locked per-campus target
+  /// rather than defining a second one — that decision has owned the response clock since
+  /// 2026-06-21, and QM-D9/QM-D12 were partly re-inventing it.
+  slaDueAt     DateTime?
+  firstReplyAt DateTime?
+  resolvedAt   DateTime?
+
+  /// The ACKNOWLEDGEMENT target — the only genuinely new clock (SD-COM-11 has no acknowledgement
+  /// concept; "unanswered past a target" is a response measure). Per QM-D12 it is a measured state
+  /// with its own clock, and it fires on FILING, not capture — it measures the time until a human
+  /// looked at the thing, which is what a family actually experiences.
+  ackDueAt       DateTime?
+  acknowledgedAt DateTime?
+
+  // --- triage gate (QM-D10) --------------------------------------------------------------
+  /// low | medium | high. Above a CONFIG threshold, filing needs a second person (R3-5
+  /// maker-checker, threshold-dialled). The approval NEVER gates the response — a serious
+  /// complaint is answered while the second pair of eyes is still pending.
+  seriousness        String?
+  triageApprovedById String?
+  triageApprovedBy   Staff?  @relation("triageApprovedBy", fields: [triageApprovedById], references: [id])
+  triageApprovedAt   DateTime?
+
+  // --- closure (QM-D18) -----------------------------------------------------------------
+  /// The complainant's own rating. Sat at 54% even in the tightened year, so it cannot be a hard
+  /// precondition — it comes from outside the school.
+  satisfaction Int?
+  /// Required at closure when `satisfaction` is null: asked_no_reply | asked_declined |
+  /// not_appropriate | never_asked. Turns the missing ~46% from an invisible gap into a measurable
+  /// one — `never_asked` is the only value that indicates a fixable desk-process failure.
+  satisfactionAbsentReason String?
+
+  /// Safeguarding: content-based, never flag-based (R3-18). Tier-2, named access only.
+  isSafeguarding Boolean @default(false)
+
+  /// QM-D33: the staff members this complaint is ABOUT — excluded from the record's AUDIENCE.
+  /// The substance reaches the named person through a conversation a manager has with them,
+  /// recorded on the complaint (Activity kind 'conveyed') — never by them reading the record.
+  /// DELIBERATE CONSTRAINT: no view, query or index may list "complaints about person X".
+  /// This field exists to EXCLUDE, never to ACCRUE — 53% of the real corpus's staff-related
+  /// complaints are developmental, and a per-person file would turn feedback into a dossier
+  /// (QM-D16(c)'s firewall, held structurally rather than by a suppression rule).
+  aboutStaffIds String[] @default([])
+
+  clusterId String?
+  cluster   Cluster? @relation(fields: [clusterId], references: [id])
+
+  /// When the CURRENT owner took it on — the escalation timer's input (feedback #20).
+  /// Cleared with the owner, so a returned-to-pool item does not carry a stale clock.
+  ownerSetAt DateTime?
+
+  messages   RequestMessage[]
+  activities Activity[]
+  chases     Chase[]
+  mailLedgerEntries MailLedgerEntry[]
+  voicemailAudio    VoicemailAudio?
+
+  @@index([campusOrgUnitId, status])
+  @@index([arrivedAt])
+  @@index([sourceThreadId])
+}
+
+/// IVR voicemail audio ("press 2 to leave a message" — docs/IVR-VOICEMAIL-BRIEF.md). One row
+/// per call, 1:1 with the Request it filed.
+///
+/// The bytes ARE stored here, unlike RequestMessage.attachments (an email attachment's original
+/// stays in Gmail — see that field's comment — so the app only ever needs the metadata). A
+/// voicemail has no such second copy: the PBX is the only other place the audio ever existed,
+/// and the brief's own retention ask is "we would rather hold the audio ourselves and have
+/// theirs expire quickly." A trial-line pilot's volume is small enough that Postgres bytea is
+/// the honest answer, not a placeholder for a real object store.
+model VoicemailAudio {
+  id     String  @id
+  requestId String @unique
+  request   Request @relation(fields: [requestId], references: [id], onDelete: Cascade)
+
+  /// Which campus line the caller rang — kept alongside the Request's own resolved campus
+  /// because a line can be unmapped (core/voicemail.ts's resolveVoicemailCampus fallback) and
+  /// this is the raw fact a person would need to fix that config.
+  dialledNumber   String
+  /// CLI as the PBX sent it, unmodified. Empty string means withheld — never null, so "we
+  /// don't know" and "the caller withheld it" stay distinguishable.
+  callerNumber    String
+  /// The IVR menu option the caller pressed ("Front Desk", "Transport", …), as YOCC/Enjay's own
+  /// dashboard already shows per call — null when the vendor payload carried none. Drives the
+  /// team-email routing (core/voicemail.ts's resolveVoicemailTeam) and is kept here so a later
+  /// reader can see WHY a call landed with the team it did.
+  ivrMenu         String?
+  contentType     String
+  sizeBytes       Int
+  durationSeconds Int
+  audio           Bytes
+  receivedAt      DateTime @default(now())
+}
+
+model RequestMessage {
+  id          String   @id
+  requestId   String
+  request     Request  @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  direction   String // in | out
+  senderLabel String // "Family 41" or a staff name — never a real address
+  at          DateTime
+  body        String
+  /// QM-D35: a staff reply is content + delivery intent, and the ENGINE chooses the rail per
+  /// recipient — never the author. Which rails carried (or will carry) this message:
+  /// 'app' (into the family's own thread, QM-D34) and/or 'email' (from the school's address,
+  /// QM-D8). Recorded so the reply is authored once and recorded once whatever carried it —
+  /// one outbound voice, one history. Inbound messages leave it empty.
+  dispatch String[] @default([])
+
+  /// What came attached to this message: name, type and size — NEVER the bytes (feedback #23).
+  ///
+  /// Metadata only, deliberately. Storing attachment bytes in a text column is exactly what
+  /// produced the 3.7-million-character bodies that made a record's page 141,945px tall, and
+  /// Gmail still holds the original — the Open-in-Gmail link on every record reaches it.
+  /// Shape: [{ filename, contentType, bytes }]. Empty array when nothing was attached.
+  attachments Json @default("[]")
+}
+
+/// The action trail — everything after filing lands on the record, not in email (R3-18 ext).
+model Activity {
+  id        String   @id
+  requestId String
+  request   Request  @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  at        DateTime
+  actorId   String?
+  actor     Staff?   @relation(fields: [actorId], references: [id])
+  kind      String // filed | assigned | replied | escalated | resolved | reopened | note | classified | acknowledged | triage_approved
+  detail    String
+}
+
+/// QM-D14: a chase is a REAL owned work item with its own lifecycle — the desk's "find the
+/// owner" act on a request whose RESPONSE target has breached. Three constraints are
+/// structural here, not just policy:
+///  1. Reference-only, never the narrative (HDT-9): no subject, no family, no body field
+///     exists on this model — a chase can only ever say "FD-0142 is overdue, find its owner",
+///     so it can never widen the audience of a restricted record (R3-4).
+///  2. Closing a chase NEVER closes the request — finding the person is not resolving the
+///     family's problem. Nothing here touches Request.status.
+///  3. Which items are OWED a chase is DERIVED at read time from the breached response clock
+///     (QM-D15's shape — no stored flag); a row exists only once the desk actually acts.
+model Chase {
+  id        String   @id
+  requestId String
+  request   Request  @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  /// The front desk owns the chase queue (QM-D14) — per campus, like every desk queue.
+  campusOrgUnitId String
+  openedAt  DateTime
+  closedAt  DateTime?
+  closedById String?
+  closedBy   Staff?  @relation("chaseClosedBy", fields: [closedById], references: [id])
+  /// "Reached the owner", "left a message", "walked to the classroom" — the act, never the story.
+  outcome String?
+
+  @@index([requestId])
+}
+
+/// One row per ingestion pass — the Pull button or the five-minute timer (2026-08-24, the
+/// email-visibility round). This is what lets the Mailbox page answer "is the pipe alive,
+/// when did it last run, and what did it do" — the IngestSummary used to be returned to one
+/// browser once and discarded, which made every pull unaccountable a minute later.
+/// Deliberately NOT per-message (that is the mail ledger's job, step 3): this table is about
+/// the PASS. Counts mirror IngestSummary; error strings are messages about the run, never
+/// mail bodies.
+model IngestRun {
+  id         String    @id
+  startedAt  DateTime
+  finishedAt DateTime?
+  /// 'pull' (a human pressed the button) | 'tick' (the timer). The health line treats them
+  /// differently: a missing TICK means automation is failing; a missing pull means nothing.
+  trigger    String
+  /// Who pressed it. Null for the timer.
+  actorId    String?
+  actor      Staff?    @relation(fields: [actorId], references: [id])
+  source     String // demo | gmail
+  /// False until the pass finishes without throwing. A row with ok=false and a finishedAt is
+  /// a failed pass; ok=false with NO finishedAt is a pass that died mid-flight (deploy,
+  /// crash) — both are "down" evidence, and neither is silent.
+  ok         Boolean   @default(false)
+  fetched    Int       @default(0)
+  created    Int       @default(0)
+  appended   Int       @default(0)
+  skipped    Int       @default(0)
+  parked     Int       @default(0)
+  errors     String[]  @default([])
+
+  @@index([startedAt])
+}
+
+/// One row per mailbox message the ingest fully processed (2026-08-24, step 3 of the
+/// email-visibility round) — the MAIL LEDGER: who sent it, what it said on the envelope, and
+/// what became of it. The outcome chip is the frozen fact at processing time; the request
+/// LINK follows the record live. Sender and subject are stored here rather than joined from
+/// Request because the ledger must be total over the fetch — an errored message has no
+/// Request row to join, and "fetched 7" must reconcile row by row.
+///
+/// Keyed UNIQUE on the RFC822 Message-ID: one mail is one ledger row forever. A re-pull that
+/// skips an already-stored message finds its row already present and writes nothing — the
+/// ledger mirrors the mailbox, not the pull count (IngestRun carries per-pass counts).
+model MailLedgerEntry {
+  id        String @id
+  messageId String @unique
+  /// The source thread id — Gmail's own when source='gmail', which is what makes the
+  /// row's "Open in Gmail" link possible (the #all/<id> fragment).
+  threadId  String?
+  source    String // demo | gmail
+  channel   String // email | app
+
+  fromName  String?
+  fromEmail String?
+  /// Everything in To + Cc, as ingested.
+  recipients String[]
+  subject    String
+  /// When the sender sent it.
+  receivedAt  DateTime
+  processedAt DateTime
+
+  /// core/mailLedger.ts's closed vocabulary: new_request | joined_thread | parked_vendor |
+  /// parked_automated | already_had | error.
+  outcome String
+  /// One optional extra sentence — "Exploded into 4 call captures.", or the error text.
+  detail  String?
+
+  /// The request this mail became or joined. SetNull so clearing requests (the synthetic
+  /// reseed) never destroys the ledger's mailbox history.
+  requestId String?
+  request   Request? @relation(fields: [requestId], references: [id], onDelete: SetNull)
+
+  @@index([processedAt])
+  @@index([requestId])
+}
+
+/// A group of requests that are one event, not many. The 7 July finding: thirteen contacts
+/// about one decision, four carrying an identical templated subject.
+model Cluster {
+  id              String    @id
+  campusOrgUnitId String?
+  campus          OrgUnit?  @relation(fields: [campusOrgUnitId], references: [id])
+  label           String
+  /// Normalised subject signature the members share.
+  signature       String
+  windowStart     DateTime
+  windowEnd       DateTime
+  /// True when the evidence says this was organised, not coincidental.
+  isCoordinated   Boolean   @default(false)
+  /// How many members carried a literal "Subject:" prefix — the copy-paste tell.
+  templateHits    Int       @default(0)
+  requests        Request[]
+}
+
+/// Who changed desk access, when, and to whom — feedback #34.
+///
+/// Its own table rather than a row on Activity, because Activity.requestId is required and an
+/// access change belongs to no request. Making that column optional would weaken every existing
+/// audit row's guarantee to accommodate one new case, which is the wrong trade: "who did this"
+/// is the only question a log exists to answer, and an access-control screen without a trail is
+/// precisely where that question gets asked.
+///
+/// Never deleted, and never updated — append-only by convention. The Staff row it points at is
+/// kept even when access is revoked, so this stays readable.
+model AccessChange {
+  id        String   @id
+  at        DateTime @default(now())
+  /// Who made the change. A Staff id, resolved from the signed-in session, never a form field.
+  actorId   String?
+  actor     Staff?   @relation("accessChangeActor", fields: [actorId], references: [id])
+  /// Whose access changed. Stored as the EMAIL rather than an id: the subject may not have had
+  /// a Staff row before the change that created one.
+  subjectEmail String
+  /// granted | changed | revoked
+  kind      String
+  detail    String
+
+  @@index([at])
+  @@index([subjectEmail])
+}
+
+/// Who is on the desk, on a given day, at a given campus — feedback #21.
+///
+/// The desk already keeps this by hand ("Monday to Saturday, paired with the driver, through to
+/// Diwali"). Stored per DAY rather than as a recurring pattern because the hand-kept version is
+/// edited constantly — somebody swaps, somebody is off — and a pattern with a pile of exceptions
+/// is harder to read than the days themselves. The rotation generator proposes; these rows rule.
+model RosterDay {
+  id              String   @id
+  campusOrgUnitId String
+  campus          OrgUnit  @relation(fields: [campusOrgUnitId], references: [id])
+  /// Midnight IST of the day this covers, stored as the UTC instant.
+  onDate          DateTime
+  staffId         String
+  staff           Staff    @relation("rosterStaff", fields: [staffId], references: [id], onDelete: Cascade)
+  createdAt       DateTime @default(now())
+
+  @@unique([campusOrgUnitId, onDate, staffId])
+  @@index([campusOrgUnitId, onDate])
+}
+
+/// Which person usually handles which kind of request, per campus — feedback #18.
+///
+/// A default, never a rule: chooseOwner falls back to whoever is on duty when the routed person
+/// is away or off, because an owner who is present beats the right owner who is not. One person
+/// per category per campus, so there is no tie to break and no hidden ordering.
+model CategoryRoute {
+  id              String  @id
+  campusOrgUnitId String
+  campus          OrgUnit @relation(fields: [campusOrgUnitId], references: [id])
+  /// A key from core/taxonomy.ts CATEGORIES.
+  category        String
+  staffId         String
+  staff           Staff   @relation("routeStaff", fields: [staffId], references: [id], onDelete: Cascade)
+
+  @@unique([campusOrgUnitId, category])
+}
+
+/// A caller whose missed calls should stop becoming callback slips.
+///
+/// Added 27-Aug-2026. The live Switchboard held 437 slips from 147 callers, and ONE number
+/// accounted for 174 of them -- about 11.6 calls a day, every day, since 12-Aug. It and the
+/// second-busiest share a landline prefix, so they read as the school's own extensions rather
+/// than anyone trying to reach the desk. Nobody is going to ring back their own switchboard.
+///
+/// A TABLE rather than an env var because the desk must be able to do this without a deploy,
+/// and because "who blocked this, when, and why" is exactly the sort of thing that gets asked
+/// six months later about a number that turns out to have mattered.
+///
+/// Blocking stops FUTURE slips and retires the existing ones. It never deletes: the calls
+/// remain on the record, out of the callback list.
+model BlockedCaller {
+  id        String   @id
+  /// last-10-digits form, same normalisation as FamilyPhone.phoneKey
+  phoneKey  String   @unique
+  /// Shown on the screen that lists blocks, so a later reader knows why.
+  reason    String
+  /// Staff id, or a note when it was done by an operator script. Provenance only, not an FK.
+  blockedBy String?
+  createdAt DateTime @default(now())
+}
+
+/// Which campuses a person may work in. One row per campus they hold.
+///
+/// Added 27-Aug-2026 so colleagues beyond the original three can test on real campuses. Ported
+/// from route-planning's `AppUserCampus`, which solved the same problem first and whose shape is
+/// the estate's precedent for multi-campus rights.
+///
+/// WHY A TABLE AND NOT A SECOND COLUMN. `Staff.scopeOrgUnitId` holds exactly one campus, so a
+/// person who covers FSK and FWGS had to be either given 'group' -- every campus, present and
+/// future -- or entered twice. Both are wrong, and the first is how a testing account quietly
+/// becomes an estate-wide one.
+///
+/// WHAT IT DOES NOT HOLD: capabilities. Those stay on `Staff.permissions`, because a desk
+/// assistant does the same job at both campuses. Grants say WHERE, permissions say WHAT, and
+/// keeping them apart means adding a campus can never accidentally widen what somebody may do.
+model StaffCampus {
+  id      String @id
+  staff   Staff  @relation(fields: [staffId], references: [id], onDelete: Cascade)
+  staffId String
+  /// A campus OrgUnit id, or NULL for group scope -- every campus, including ones added later.
+  /// Null rather than the literal 'group' so the unique index below reads naturally.
+  campusOrgUnitId String?
+
+  /// Provenance, because "who gave this person a second campus" is the question an access
+  /// review actually asks. Staff id; not an FK, so removing somebody never erases the trail.
+  grantedBy String?
+  grantedAt DateTime @default(now())
+
+  /// Postgres does not treat NULL as equal to itself, so this cannot dedupe the group-scope row
+  /// -- the same trap event-management's rights model documents. The grant action checks for an
+  /// existing group row instead.
+  @@unique([staffId, campusOrgUnitId])
+  @@index([staffId])
+}

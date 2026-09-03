@@ -1,0 +1,2520 @@
+/* ==========================================================================
+   Fountainhead Design System — Components
+   Vanilla-CSS, framework-agnostic. Class convention: BEM-ish, "fh-" prefixed.
+   Every value derives from a semantic token, so all components inherit
+   light / dark / compact theming automatically.
+
+   Contents
+     01 Button            08 Table              15 Modal / dialog
+     02 Button group      09 Tabs               16 Tooltip
+     03 Badge / Tag       10 Breadcrumb         17 Avatar
+     04 Chip              11 Pagination         18 Progress / Spinner
+     05 Card              12 Navbar             19 Skeleton
+     06 Stat (KPI)        13 Sidebar (app shell)20 Divider
+     07 Alert             14 Dropdown / Menu     21 Switch / Toggle
+     22 Empty/Error state 23 Toast              24 Confirm dialog
+     25 Stepper/Pipeline   26 Person cell        27 Row select + Bulk bar
+     28 Grade chip/grid    29 Attendance mark    30 Calendar grid
+     31 Map frame          32 Acting-as          33 Danger card
+     34 Tree (org)         35 Board (kanban)     36 Timeline
+     Form controls are grouped under "FORMS".
+     The opt-in product/ERP "Beacon" profile block is at the end.
+   ========================================================================== */
+
+/* ============================ 01 BUTTON ============================ */
+.fh-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--fh-space-2);
+  height: var(--fh-control-height);
+  padding-inline: var(--fh-control-pad-x);
+  font-family: var(--fh-font-heading);
+  font-size: var(--fh-control-font);
+  font-weight: var(--fh-weight-semibold);
+  line-height: 1;
+  white-space: nowrap;
+  text-decoration: none;
+  color: var(--fh-color-text);
+  background: var(--fh-color-surface);
+  border: var(--fh-border-width) solid var(--fh-color-border-strong);
+  border-radius: var(--fh-control-radius);
+  transition: background var(--fh-duration-fast) var(--fh-ease-standard),
+              border-color var(--fh-duration-fast) var(--fh-ease-standard),
+              color var(--fh-duration-fast) var(--fh-ease-standard),
+              box-shadow var(--fh-duration-fast) var(--fh-ease-standard);
+  user-select: none;
+}
+.fh-btn:hover { text-decoration: none; }
+.fh-btn:focus-visible { outline: none; box-shadow: var(--fh-ring); }
+.fh-btn:disabled,
+.fh-btn[aria-disabled="true"],
+.fh-btn.is-disabled {
+  opacity: 0.55;
+  pointer-events: none;
+}
+
+/* Sizes */
+.fh-btn--sm { height: var(--fh-control-height-sm); padding-inline: var(--fh-control-pad-x-sm); font-size: var(--fh-text-xs); }
+.fh-btn--lg { height: var(--fh-control-height-lg); padding-inline: var(--fh-space-6); font-size: var(--fh-text-base); }
+.fh-btn--block { display: flex; width: 100%; }
+.fh-btn--icon { padding-inline: 0; width: var(--fh-control-height); }
+.fh-btn--icon.fh-btn--sm { width: var(--fh-control-height-sm); }
+.fh-btn--icon.fh-btn--lg { width: var(--fh-control-height-lg); }
+
+/* Solid variants */
+.fh-btn--primary {
+  color: var(--fh-color-primary-fg);
+  background: var(--fh-color-primary);
+  border-color: var(--fh-color-primary);
+}
+.fh-btn--primary:hover { background: var(--fh-color-primary-hover); border-color: var(--fh-color-primary-hover); }
+.fh-btn--primary:active { background: var(--fh-color-primary-active); border-color: var(--fh-color-primary-active); }
+
+.fh-btn--secondary {
+  color: var(--fh-color-secondary-fg);
+  background: var(--fh-color-secondary);
+  border-color: var(--fh-color-secondary);
+}
+.fh-btn--secondary:hover { background: var(--fh-color-secondary-hover); border-color: var(--fh-color-secondary-hover); }
+.fh-btn--secondary:active { background: var(--fh-color-secondary-active); border-color: var(--fh-color-secondary-active); }
+
+.fh-btn--accent {
+  color: var(--fh-color-accent-fg);
+  background: var(--fh-color-accent);
+  border-color: var(--fh-color-accent);
+}
+.fh-btn--accent:hover { background: var(--fh-color-accent-hover); border-color: var(--fh-color-accent-hover); }
+.fh-btn--accent:active { background: var(--fh-color-accent-active); border-color: var(--fh-color-accent-active); }
+
+.fh-btn--success {
+  color: var(--fh-color-success-fg);
+  background: var(--fh-color-success);
+  border-color: var(--fh-color-success);
+}
+.fh-btn--success:hover { background: var(--fh-color-success-hover); border-color: var(--fh-color-success-hover); }
+
+.fh-btn--danger {
+  color: var(--fh-color-danger-fg);
+  background: var(--fh-color-danger);
+  border-color: var(--fh-color-danger);
+}
+.fh-btn--danger:hover { background: var(--fh-color-danger-hover); border-color: var(--fh-color-danger-hover); }
+.fh-btn--danger:active { background: var(--fh-color-danger-active); border-color: var(--fh-color-danger-active); }
+.fh-btn--danger:focus-visible { box-shadow: var(--fh-ring-danger); }
+
+/* Outline (uses brand colour for text + border) */
+.fh-btn--outline {
+  color: var(--fh-color-primary-text);
+  background: transparent;
+  border-color: var(--fh-color-primary);
+}
+.fh-btn--outline:hover { background: var(--fh-color-primary-subtle); }
+
+/* Ghost / subtle / link */
+.fh-btn--ghost { background: transparent; border-color: transparent; color: var(--fh-color-text); }
+.fh-btn--ghost:hover { background: var(--fh-color-surface-sunken); }
+
+.fh-btn--subtle {
+  color: var(--fh-color-primary-subtle-fg);
+  background: var(--fh-color-primary-subtle);
+  border-color: transparent;
+}
+.fh-btn--subtle:hover { filter: brightness(0.97); }
+
+.fh-btn--link {
+  height: auto; padding: 0;
+  background: transparent; border-color: transparent;
+  color: var(--fh-color-text-link);
+}
+.fh-btn--link:hover { text-decoration: underline; }
+
+/* ============================ 02 BUTTON GROUP ============================ */
+.fh-btn-group { display: inline-flex; }
+.fh-btn-group .fh-btn { border-radius: 0; margin-left: -1px; }
+.fh-btn-group .fh-btn:first-child { border-start-start-radius: var(--fh-control-radius); border-end-start-radius: var(--fh-control-radius); margin-left: 0; }
+.fh-btn-group .fh-btn:last-child  { border-start-end-radius: var(--fh-control-radius); border-end-end-radius: var(--fh-control-radius); }
+.fh-btn-group .fh-btn:focus-visible { position: relative; z-index: 1; }
+
+/* ============================ 03 BADGE / TAG ============================ */
+.fh-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--fh-space-1);
+  padding: 0.15em 0.6em;
+  font-family: var(--fh-font-heading);
+  font-size: var(--fh-text-xs);
+  font-weight: var(--fh-weight-semibold);
+  line-height: 1.4;
+  border-radius: var(--fh-radius-full);
+  background: var(--fh-color-surface-sunken);
+  color: var(--fh-color-text-muted);
+  border: var(--fh-border-width) solid transparent;
+}
+.fh-badge--primary { background: var(--fh-color-primary-subtle); color: var(--fh-color-primary-subtle-fg); }
+.fh-badge--secondary { background: var(--fh-color-secondary-subtle); color: var(--fh-color-secondary-subtle-fg); }
+.fh-badge--accent { background: var(--fh-color-accent-subtle); color: var(--fh-color-accent-subtle-fg); }
+.fh-badge--success { background: var(--fh-color-success-subtle); color: var(--fh-color-success-subtle-fg); }
+.fh-badge--warning { background: var(--fh-color-warning-subtle); color: var(--fh-color-warning-subtle-fg); }
+.fh-badge--danger { background: var(--fh-color-danger-subtle); color: var(--fh-color-danger-subtle-fg); }
+.fh-badge--info { background: var(--fh-color-info-subtle); color: var(--fh-color-info-subtle-fg); }
+.fh-badge--solid { background: var(--fh-color-primary); color: var(--fh-color-primary-fg); }
+.fh-badge--outline { background: transparent; border-color: var(--fh-color-border-strong); color: var(--fh-color-text-muted); }
+
+/* Status dot */
+.fh-badge__dot { width: 0.5em; height: 0.5em; border-radius: 50%; background: currentColor; }
+
+/* ============================ 04 CHIP ============================ */
+.fh-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--fh-space-2);
+  height: var(--fh-control-height-sm);
+  padding-inline: var(--fh-space-3);
+  font-size: var(--fh-text-sm);
+  background: var(--fh-color-surface-sunken);
+  border: var(--fh-border-width) solid var(--fh-color-border);
+  border-radius: var(--fh-radius-full);
+  color: var(--fh-color-text);
+}
+.fh-chip__remove {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 1.1em; height: 1.1em; border-radius: 50%;
+  color: var(--fh-color-text-subtle);
+  font-size: 1.1em; line-height: 1;
+}
+.fh-chip__remove:hover { background: var(--fh-color-border); color: var(--fh-color-text); }
+
+/* ============================ 05 CARD ============================ */
+.fh-card {
+  background: var(--fh-color-surface);
+  border: var(--fh-border-width) solid var(--fh-color-border);
+  border-radius: var(--fh-radius-lg);
+  box-shadow: var(--fh-shadow-sm);
+  overflow: hidden;
+}
+.fh-card--flat { box-shadow: none; }
+.fh-card--raised { box-shadow: var(--fh-shadow-md); }
+.fh-card--interactive { transition: box-shadow var(--fh-duration-base) var(--fh-ease-standard), transform var(--fh-duration-base) var(--fh-ease-standard); cursor: pointer; }
+.fh-card--interactive:hover { box-shadow: var(--fh-shadow-lg); transform: translateY(-2px); }
+.fh-card__header {
+  padding: var(--fh-card-pad);
+  border-bottom: var(--fh-border-width) solid var(--fh-color-border);
+}
+.fh-card__title { font-family: var(--fh-font-heading); font-weight: var(--fh-weight-bold); font-size: var(--fh-text-lg); }
+.fh-card__body { padding: var(--fh-card-pad); }
+.fh-card__footer {
+  padding: var(--fh-card-pad);
+  border-top: var(--fh-border-width) solid var(--fh-color-border);
+  background: var(--fh-color-surface-sunken);
+}
+/* Accent strip — brand flourish for feature cards */
+.fh-card--accent-top { border-top: 3px solid var(--fh-color-primary); }
+
+/* ============================ 06 STAT / KPI (ERP dashboards) ============================ */
+.fh-stat {
+  display: flex;
+  flex-direction: column;
+  gap: var(--fh-space-1);
+  padding: var(--fh-card-pad);
+  background: var(--fh-color-surface);
+  border: var(--fh-border-width) solid var(--fh-color-border);
+  border-radius: var(--fh-radius-lg);
+}
+.fh-stat__label { font-size: var(--fh-text-sm); color: var(--fh-color-text-muted); }
+.fh-stat__value { font-family: var(--fh-font-heading); font-weight: var(--fh-weight-bold); font-size: var(--fh-text-4xl); line-height: 1.1; }
+.fh-stat__delta { display: inline-flex; align-items: center; gap: var(--fh-space-1); font-size: var(--fh-text-sm); font-weight: var(--fh-weight-semibold); }
+.fh-stat__delta--up { color: var(--fh-color-success-text); }
+.fh-stat__delta--down { color: var(--fh-color-danger-text); }
+/* Tone the headline value with a calmer *text* colour (not full-saturation brand)
+   so large counts stay legible without turning a dashboard into a wall of alarm.
+   Reserve the saturated --fh-color-danger/etc. for small accents and controls. */
+.fh-stat--primary .fh-stat__value { color: var(--fh-color-primary-text); }
+.fh-stat--success .fh-stat__value { color: var(--fh-color-success-text); }
+.fh-stat--warning .fh-stat__value { color: var(--fh-color-warning-text); }
+.fh-stat--danger  .fh-stat__value { color: var(--fh-color-danger-text); }
+
+/* ============================ 07 ALERT / CALLOUT ============================ */
+.fh-alert {
+  display: flex;
+  gap: var(--fh-space-3);
+  padding: var(--fh-space-4);
+  border: var(--fh-border-width) solid var(--fh-color-border);
+  border-left-width: 4px;
+  border-radius: var(--fh-radius-md);
+  background: var(--fh-color-surface);
+  color: var(--fh-color-text);
+}
+.fh-alert__icon { flex: none; font-size: 1.2em; line-height: 1.4; }
+.fh-alert__body { flex: 1; }
+.fh-alert__title { font-family: var(--fh-font-heading); font-weight: var(--fh-weight-bold); margin-bottom: var(--fh-space-1); }
+.fh-alert--info    { background: var(--fh-color-info-subtle); border-color: var(--fh-color-info); color: var(--fh-color-info-subtle-fg); }
+.fh-alert--success { background: var(--fh-color-success-subtle); border-color: var(--fh-color-success); color: var(--fh-color-success-subtle-fg); }
+.fh-alert--warning { background: var(--fh-color-warning-subtle); border-color: var(--fh-color-warning); color: var(--fh-color-warning-subtle-fg); }
+.fh-alert--danger  { background: var(--fh-color-danger-subtle); border-color: var(--fh-color-danger); color: var(--fh-color-danger-subtle-fg); }
+
+/* ============================ FORMS ============================ */
+.fh-field { display: flex; flex-direction: column; gap: var(--fh-space-2); }
+.fh-label {
+  font-family: var(--fh-font-heading);
+  font-size: var(--fh-text-sm);
+  font-weight: var(--fh-weight-semibold);
+  color: var(--fh-color-text);
+}
+.fh-label__req { color: var(--fh-color-danger-text); margin-left: 2px; }
+.fh-help { font-size: var(--fh-text-xs); color: var(--fh-color-text-muted); }
+.fh-error { font-size: var(--fh-text-xs); color: var(--fh-color-danger-text); font-weight: var(--fh-weight-semibold); }
+
+.fh-input,
+.fh-textarea,
+.fh-select {
+  width: 100%;
+  min-height: var(--fh-control-height);
+  padding: 0 var(--fh-control-pad-x);
+  font-family: var(--fh-font-body);
+  font-size: var(--fh-control-font);
+  color: var(--fh-color-text);
+  background: var(--fh-color-field-bg);
+  border: var(--fh-border-width) solid var(--fh-color-field-border);
+  border-radius: var(--fh-control-radius);
+  transition: border-color var(--fh-duration-fast) var(--fh-ease-standard),
+              box-shadow var(--fh-duration-fast) var(--fh-ease-standard);
+}
+.fh-textarea { padding: var(--fh-space-2) var(--fh-control-pad-x); min-height: calc(var(--fh-control-height) * 2); line-height: var(--fh-leading-normal); resize: vertical; }
+.fh-input:hover, .fh-textarea:hover, .fh-select:hover { border-color: var(--fh-color-border-strong); }
+.fh-input:focus, .fh-textarea:focus, .fh-select:focus {
+  outline: none;
+  border-color: var(--fh-color-focus);
+  box-shadow: var(--fh-ring);
+}
+.fh-input:disabled, .fh-textarea:disabled, .fh-select:disabled {
+  background: var(--fh-color-field-disabled-bg);
+  color: var(--fh-color-text-subtle);
+  cursor: not-allowed;
+}
+.fh-input--sm { min-height: var(--fh-control-height-sm); font-size: var(--fh-text-xs); }
+.fh-input--lg { min-height: var(--fh-control-height-lg); font-size: var(--fh-text-base); }
+
+/* Invalid state */
+.fh-field.is-invalid .fh-input,
+.fh-field.is-invalid .fh-textarea,
+.fh-field.is-invalid .fh-select,
+.fh-input[aria-invalid="true"] {
+  border-color: var(--fh-color-danger);
+}
+.fh-field.is-invalid .fh-input:focus,
+.fh-input[aria-invalid="true"]:focus { box-shadow: var(--fh-ring-danger); }
+
+/* Select chevron */
+.fh-select {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%236E7884' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right var(--fh-space-3) center;
+  padding-right: var(--fh-space-8);
+}
+
+/* Small select. MUST sit after the chevron block above: same specificity, so a --sm rule placed
+   before it would lose padding-right/background-position to the later .fh-select declaration.
+   The chevron comes in with the control, or a 32px-tall select leaves its value cramped. */
+.fh-select--sm {
+  min-height: var(--fh-control-height-sm);
+  font-size: var(--fh-text-xs);
+  background-position: right var(--fh-space-2) center;
+  padding-right: var(--fh-space-6);
+}
+
+/* Auto-width inline controls — for filter toolbars / action bars, where the
+   default full-width form-field behaviour would stack controls vertically. */
+.fh-input--auto,
+.fh-select--auto { width: auto; min-width: 10rem; }
+
+/* Toolbar / filter bar — a horizontal row of controls that wraps gracefully.
+   Pair with .fh-select--auto / .fh-input--auto so the controls size to content. */
+.fh-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--fh-space-2);
+}
+.fh-toolbar--between { justify-content: space-between; }
+.fh-toolbar__spacer { margin-left: auto; }
+/* Controls inside a toolbar size to their content, so a filter row stays inline
+   instead of each full-width form control wrapping onto its own line. */
+.fh-toolbar .fh-select,
+.fh-toolbar .fh-input,
+.fh-toolbar .fh-textarea { width: auto; min-width: 9rem; max-width: 16rem; }
+
+/* Inline field — label sitting beside its control (compact filters / settings). */
+.fh-field--inline { flex-direction: row; align-items: center; gap: var(--fh-space-2); }
+.fh-field--inline > .fh-label { margin: 0; white-space: nowrap; }
+
+/* Input group (addons) */
+.fh-input-group { display: flex; align-items: stretch; }
+.fh-input-group .fh-input { border-radius: 0; }
+.fh-input-group > :first-child { border-start-start-radius: var(--fh-control-radius); border-end-start-radius: var(--fh-control-radius); }
+.fh-input-group > :last-child  { border-start-end-radius: var(--fh-control-radius); border-end-end-radius: var(--fh-control-radius); }
+.fh-input-group__addon {
+  display: inline-flex; align-items: center;
+  padding-inline: var(--fh-control-pad-x);
+  background: var(--fh-color-surface-sunken);
+  border: var(--fh-border-width) solid var(--fh-color-field-border);
+  color: var(--fh-color-text-muted);
+  font-size: var(--fh-control-font);
+  white-space: nowrap;
+}
+.fh-input-group .fh-input + .fh-input-group__addon,
+.fh-input-group .fh-input-group__addon + .fh-input { margin-left: -1px; }
+
+/* Checkbox & radio */
+.fh-check { display: inline-flex; align-items: flex-start; gap: var(--fh-space-2); cursor: pointer; font-size: var(--fh-text-sm); }
+.fh-check input[type="checkbox"],
+.fh-check input[type="radio"] {
+  appearance: none;
+  flex: none;
+  width: 1.15em; height: 1.15em;
+  margin-top: 0.12em;
+  border: var(--fh-border-width-2) solid var(--fh-color-field-border);
+  background: var(--fh-color-field-bg);
+  transition: background var(--fh-duration-fast), border-color var(--fh-duration-fast);
+}
+.fh-check input[type="checkbox"] { border-radius: var(--fh-radius-xs); }
+.fh-check input[type="radio"] { border-radius: 50%; }
+.fh-check input:checked {
+  background-color: var(--fh-color-primary);
+  border-color: var(--fh-color-primary);
+}
+.fh-check input[type="checkbox"]:checked {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6L9 17l-5-5'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: center; background-size: 0.9em;
+}
+.fh-check input[type="radio"]:checked { box-shadow: inset 0 0 0 3px var(--fh-color-field-bg); }
+.fh-check input:focus-visible { outline: none; box-shadow: var(--fh-ring); }
+
+/* ============================ 21 SWITCH / TOGGLE ============================ */
+.fh-switch { display: inline-flex; align-items: center; gap: var(--fh-space-2); cursor: pointer; }
+.fh-switch input { position: absolute; opacity: 0; width: 0; height: 0; }
+.fh-switch__track {
+  position: relative;
+  width: 2.5rem; height: 1.4rem;
+  background: var(--fh-color-border-strong);
+  border-radius: var(--fh-radius-full);
+  transition: background var(--fh-duration-base) var(--fh-ease-standard);
+  flex: none;
+}
+.fh-switch__track::after {
+  content: "";
+  position: absolute; top: 2px; left: 2px;
+  width: calc(1.4rem - 4px); height: calc(1.4rem - 4px);
+  background: #fff;
+  border-radius: 50%;
+  box-shadow: var(--fh-shadow-sm);
+  transition: transform var(--fh-duration-base) var(--fh-ease-standard);
+}
+.fh-switch input:checked + .fh-switch__track { background: var(--fh-color-primary); }
+.fh-switch input:checked + .fh-switch__track::after { transform: translateX(1.1rem); }
+.fh-switch input:focus-visible + .fh-switch__track { box-shadow: var(--fh-ring); }
+
+/* ============================ 08 TABLE ============================ */
+.fh-table-wrap { overflow-x: auto; border: var(--fh-border-width) solid var(--fh-color-border); border-radius: var(--fh-radius-lg); }
+.fh-table { width: 100%; border-collapse: collapse; font-size: var(--fh-text-sm); }
+.fh-table th, .fh-table td {
+  padding: var(--fh-table-cell-pad-y) var(--fh-table-cell-pad-x);
+  text-align: left;
+  border-bottom: var(--fh-border-width) solid var(--fh-color-border);
+  font-variant-numeric: tabular-nums; /* dates & figures align down the column */
+}
+.fh-table thead th {
+  font-family: var(--fh-font-heading);
+  font-weight: var(--fh-weight-semibold);
+  font-size: var(--fh-text-xs);
+  letter-spacing: var(--fh-tracking-wide);
+  text-transform: uppercase;
+  color: var(--fh-color-text-muted);
+  background: var(--fh-color-surface-sunken);
+  white-space: nowrap;
+}
+.fh-table tbody tr:last-child td { border-bottom: none; }
+.fh-table--striped tbody tr:nth-child(even) { background: var(--fh-color-surface-sunken); }
+
+/* Compact table — a dense grid (authoring lists, per-row capture) where the default 12/16px cell
+   padding costs more rows than it earns in comfort. Overrides the two padding TOKENS rather than
+   restating `padding`, so it composes with every other modifier (--striped, --ledger, --sticky,
+   --frozen-first) and with .fh-table__num/__money instead of fighting them. Drops to --fh-text-xs
+   like every other --sm here (.fh-btn--sm, .fh-input--sm, .fh-select--sm, .fh-reveal--sm).
+
+   THE DENSITY RULE BELOW IS NOT OPTIONAL. [data-density="compact"] sets these same tokens on
+   :root, and a token set on the ELEMENT beats one set on :root — so without it, a --sm table
+   inside a compact app renders LOOSER (8px) than an ordinary table beside it (4px), which is the
+   exact opposite of what the modifier promises. Measured, not reasoned about: the first draft of
+   this rule shipped that inversion and a comment confidently claiming otherwise. In compact
+   density --sm therefore keeps the density's own padding and contributes only the smaller type. */
+.fh-table--sm {
+  --fh-table-cell-pad-y: var(--fh-space-2);
+  --fh-table-cell-pad-x: var(--fh-space-3);
+  font-size: var(--fh-text-xs);
+}
+[data-density="compact"] .fh-table--sm {
+  --fh-table-cell-pad-y: var(--fh-space-1);
+  --fh-table-cell-pad-x: var(--fh-space-3);
+}
+.fh-table--hover tbody tr:hover { background: var(--fh-color-primary-subtle); }
+.fh-table--bordered th, .fh-table--bordered td { border: var(--fh-border-width) solid var(--fh-color-border); }
+.fh-table__num { text-align: right; font-variant-numeric: tabular-nums; }
+.fh-table--sticky thead th { position: sticky; top: 0; z-index: 1; }
+
+/* ============================ 09 TABS ============================ */
+.fh-tabs { display: flex; gap: var(--fh-space-1); border-bottom: var(--fh-border-width) solid var(--fh-color-border); }
+.fh-tab {
+  padding: var(--fh-space-3) var(--fh-space-4);
+  font-family: var(--fh-font-heading);
+  font-weight: var(--fh-weight-semibold);
+  font-size: var(--fh-text-sm);
+  color: var(--fh-color-text-muted);
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  background: none;
+  transition: color var(--fh-duration-fast), border-color var(--fh-duration-fast);
+}
+.fh-tab:hover { color: var(--fh-color-text); }
+.fh-tab.is-active,
+.fh-tab[aria-selected="true"] { color: var(--fh-color-primary-text); border-bottom-color: var(--fh-color-primary); }
+.fh-tab:focus-visible { outline: none; box-shadow: var(--fh-ring); border-radius: var(--fh-radius-sm); }
+/* <button class="fh-tab"> is first-class (tabbed work surfaces switch panes client-side — see
+   §53 WORKBENCH). The rules above only clear border-BOTTOM, so a button kept its UA chrome on
+   the other three sides; and a tab carrying a count/alert badge needs a stable gap. Scoped to
+   buttons so existing anchor tabs render byte-identically. */
+button.fh-tab {
+  border-top: 0; border-left: 0; border-right: 0;
+  cursor: pointer;
+  display: inline-flex; align-items: center; gap: var(--fh-space-2);
+}
+
+/* ============================ 10 BREADCRUMB ============================ */
+.fh-breadcrumb { display: flex; flex-wrap: wrap; align-items: center; gap: var(--fh-space-2); font-size: var(--fh-text-sm); color: var(--fh-color-text-muted); }
+.fh-breadcrumb a { color: var(--fh-color-text-muted); }
+.fh-breadcrumb a:hover { color: var(--fh-color-primary-text); }
+.fh-breadcrumb li { display: inline-flex; align-items: center; gap: var(--fh-space-2); list-style: none; }
+.fh-breadcrumb li::after { content: "/"; color: var(--fh-color-text-subtle); }
+.fh-breadcrumb li:last-child::after { content: ""; }
+.fh-breadcrumb li:last-child { color: var(--fh-color-text); font-weight: var(--fh-weight-semibold); }
+
+/* ============================ 11 PAGINATION ============================ */
+.fh-pagination { display: inline-flex; gap: var(--fh-space-1); }
+.fh-pagination__item {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: var(--fh-control-height-sm); height: var(--fh-control-height-sm);
+  padding-inline: var(--fh-space-2);
+  font-size: var(--fh-text-sm); font-weight: var(--fh-weight-semibold);
+  color: var(--fh-color-text);
+  border: var(--fh-border-width) solid var(--fh-color-border);
+  border-radius: var(--fh-control-radius);
+  background: var(--fh-color-surface);
+}
+.fh-pagination__item:hover { background: var(--fh-color-surface-sunken); }
+.fh-pagination__item.is-active { background: var(--fh-color-primary); border-color: var(--fh-color-primary); color: var(--fh-color-primary-fg); }
+.fh-pagination__item:disabled { opacity: 0.5; pointer-events: none; }
+
+/* ============================ 12 NAVBAR (website top bar) ============================ */
+.fh-navbar {
+  display: flex;
+  align-items: center;
+  gap: var(--fh-space-6);
+  height: 4rem;
+  padding-inline: var(--fh-space-6);
+  background: var(--fh-color-surface);
+  border-bottom: var(--fh-border-width) solid var(--fh-color-border);
+}
+.fh-navbar__brand { display: flex; align-items: center; gap: var(--fh-space-2); margin-right: auto; }
+.fh-navbar__brand img { height: 2rem; }
+.fh-navbar__links { display: flex; align-items: center; gap: var(--fh-space-1); }
+.fh-navlink {
+  padding: var(--fh-space-2) var(--fh-space-3);
+  font-family: var(--fh-font-heading);
+  font-weight: var(--fh-weight-semibold);
+  font-size: var(--fh-text-sm);
+  color: var(--fh-color-text-muted);
+  border-radius: var(--fh-radius-md);
+}
+.fh-navlink:hover { color: var(--fh-color-text); background: var(--fh-color-surface-sunken); text-decoration: none; }
+.fh-navlink.is-active { color: var(--fh-color-primary-text); background: var(--fh-color-primary-subtle); }
+
+/* ============================ 13 SIDEBAR (ERP app shell) ============================ */
+.fh-appshell { display: grid; grid-template-columns: 260px 1fr; min-height: 100vh; }
+@media (max-width: 768px) { .fh-appshell { grid-template-columns: 1fr; } }
+.fh-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: var(--fh-space-1);
+  padding: var(--fh-space-4);
+  background: var(--fh-color-surface);
+  border-right: var(--fh-border-width) solid var(--fh-color-border);
+  /* Long nav lists scroll inside the rail; the rail itself stays put */
+  position: sticky;
+  top: 0;
+  max-height: 100vh;
+  overflow-y: auto;
+}
+
+/* Collapsible nav group (submenu level) — <details class="fh-sidebar__group">
+   <summary class="fh-sidebar__item">…<svg class="fh-sidebar__chev">…</summary>
+   <div class="fh-sidebar__sub"> …fh-sidebar__item children… </div></details> */
+.fh-sidebar__group > summary { list-style: none; cursor: pointer; }
+.fh-sidebar__group > summary::-webkit-details-marker { display: none; }
+.fh-sidebar__chev { margin-left: auto; transition: transform var(--fh-duration-fast) var(--fh-ease-standard); }
+.fh-sidebar__group[open] > summary .fh-sidebar__chev { transform: rotate(90deg); }
+.fh-sidebar__sub {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 2px 0 var(--fh-space-1);
+  padding-left: var(--fh-space-8);
+}
+.fh-sidebar__sub .fh-sidebar__item { padding-top: 6px; padding-bottom: 6px; font-size: 0.8125rem; }
+
+/* Mobile drawer — OPT-IN via .fh-appshell--drawer (default mobile behaviour stays
+   "sidebar stacks on top"). Consumer JS toggles .is-nav-open on the appshell; render
+   a .fh-appshell__scrim sibling and a .fh-navtoggle button in the topbar. */
+.fh-navtoggle { display: none; }
+/* The scrim must not exist in desktop layout — as a bare grid child it would steal
+   the sidebar's 260px column (caught by the Nucleus pilot, 2026-07-02). */
+.fh-appshell__scrim { display: none; }
+@media (max-width: 768px) {
+  .fh-appshell--drawer .fh-sidebar {
+    position: fixed;
+    inset: 0 auto 0 0;
+    width: min(300px, 84vw);
+    max-height: none;
+    z-index: var(--fh-z-overlay);
+    transform: translateX(-100%);
+    transition: transform var(--fh-duration-base) var(--fh-ease-emphasized);
+  }
+  .fh-appshell--drawer.is-nav-open .fh-sidebar { transform: none; box-shadow: var(--fh-shadow-xl); }
+  .fh-appshell--drawer .fh-appshell__scrim {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: var(--fh-color-overlay);
+    z-index: calc(var(--fh-z-overlay) - 1);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity var(--fh-duration-base) var(--fh-ease-standard);
+  }
+  .fh-appshell--drawer.is-nav-open .fh-appshell__scrim { opacity: 1; pointer-events: auto; }
+  .fh-appshell--drawer .fh-navtoggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+}
+.fh-sidebar__brand { display: flex; align-items: center; gap: var(--fh-space-2); padding: var(--fh-space-2) var(--fh-space-3) var(--fh-space-4); }
+.fh-sidebar__brand img { height: 1.75rem; }
+.fh-sidebar__section { margin-top: var(--fh-space-4); padding: 0 var(--fh-space-3); font-size: var(--fh-text-xs); font-weight: var(--fh-weight-bold); letter-spacing: var(--fh-tracking-wide); text-transform: uppercase; color: var(--fh-color-text-subtle); }
+.fh-sidebar__item {
+  display: flex; align-items: center; gap: var(--fh-space-3);
+  padding: var(--fh-space-2) var(--fh-space-3);
+  font-family: var(--fh-font-heading);
+  font-weight: var(--fh-weight-semibold);
+  font-size: var(--fh-text-sm);
+  color: var(--fh-color-text-muted);
+  border-radius: var(--fh-radius-md);
+}
+.fh-sidebar__item:hover { color: var(--fh-color-text); background: var(--fh-color-surface-sunken); text-decoration: none; }
+.fh-sidebar__item.is-active { color: var(--fh-color-primary-text); background: var(--fh-color-primary-subtle); }
+.fh-sidebar__item .fh-badge { margin-left: auto; }
+
+/* ============================ 14 DROPDOWN / MENU ============================ */
+.fh-menu {
+  min-width: 200px;
+  padding: var(--fh-space-2);
+  background: var(--fh-color-surface-raised);
+  border: var(--fh-border-width) solid var(--fh-color-border);
+  border-radius: var(--fh-radius-lg);
+  box-shadow: var(--fh-shadow-lg);
+}
+.fh-menu__item {
+  display: flex; align-items: center; gap: var(--fh-space-3);
+  width: 100%;
+  padding: var(--fh-space-2) var(--fh-space-3);
+  font-size: var(--fh-text-sm);
+  color: var(--fh-color-text);
+  border-radius: var(--fh-radius-sm);
+  text-align: left;
+}
+.fh-menu__item:hover { background: var(--fh-color-surface-sunken); text-decoration: none; }
+.fh-menu__item--danger { color: var(--fh-color-danger-text); }
+.fh-menu__divider { height: 1px; background: var(--fh-color-border); margin: var(--fh-space-2) 0; }
+
+/* ============================ 15 MODAL / DIALOG ============================ */
+.fh-modal-overlay {
+  position: fixed; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  padding: var(--fh-space-4);
+  background: var(--fh-color-overlay);
+  z-index: var(--fh-z-modal);
+}
+.fh-modal {
+  width: 100%; max-width: 520px;
+  max-height: calc(100vh - var(--fh-space-16));
+  display: flex; flex-direction: column;
+  background: var(--fh-color-surface-raised);
+  border-radius: var(--fh-radius-xl);
+  box-shadow: var(--fh-shadow-xl);
+  overflow: hidden;
+}
+.fh-modal__header { display: flex; align-items: center; justify-content: space-between; gap: var(--fh-space-4); padding: var(--fh-space-5) var(--fh-space-6); border-bottom: var(--fh-border-width) solid var(--fh-color-border); }
+.fh-modal__title { font-family: var(--fh-font-heading); font-weight: var(--fh-weight-bold); font-size: var(--fh-text-xl); }
+.fh-modal__body { padding: var(--fh-space-6); overflow-y: auto; }
+.fh-modal__footer { display: flex; justify-content: flex-end; gap: var(--fh-space-3); padding: var(--fh-space-4) var(--fh-space-6); border-top: var(--fh-border-width) solid var(--fh-color-border); background: var(--fh-color-surface-sunken); }
+
+/* ============================ 16 TOOLTIP (CSS-only) ============================ */
+.fh-tooltip { position: relative; display: inline-flex; }
+.fh-tooltip__content {
+  position: absolute; bottom: calc(100% + 8px); left: 50%; transform: translateX(-50%);
+  padding: var(--fh-space-1) var(--fh-space-2);
+  font-size: var(--fh-text-xs); white-space: nowrap;
+  color: var(--fh-color-inverse-fg);
+  background: var(--fh-color-inverse-surface);
+  border-radius: var(--fh-radius-sm);
+  box-shadow: var(--fh-shadow-md);
+  opacity: 0; pointer-events: none;
+  transition: opacity var(--fh-duration-fast) var(--fh-ease-standard);
+  z-index: var(--fh-z-tooltip);
+}
+.fh-tooltip:hover .fh-tooltip__content,
+.fh-tooltip:focus-within .fh-tooltip__content { opacity: 1; }
+
+/* ============================ 17 AVATAR ============================ */
+.fh-avatar {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 2.5rem; height: 2.5rem;
+  border-radius: 50%;
+  background: var(--fh-color-primary-subtle);
+  color: var(--fh-color-primary-subtle-fg);
+  font-family: var(--fh-font-heading);
+  font-weight: var(--fh-weight-bold);
+  font-size: var(--fh-text-sm);
+  overflow: hidden;
+  flex: none;
+}
+.fh-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.fh-avatar--sm { width: 1.75rem; height: 1.75rem; font-size: var(--fh-text-xs); }
+.fh-avatar--lg { width: 3.5rem; height: 3.5rem; font-size: var(--fh-text-lg); }
+.fh-avatar-group { display: inline-flex; }
+.fh-avatar-group .fh-avatar { border: 2px solid var(--fh-color-surface); margin-left: -0.6rem; }
+.fh-avatar-group .fh-avatar:first-child { margin-left: 0; }
+
+/* ============================ 18 PROGRESS / SPINNER ============================ */
+.fh-progress { height: var(--fh-space-2); background: var(--fh-color-surface-sunken); border-radius: var(--fh-radius-full); overflow: hidden; }
+.fh-progress__bar { height: 100%; width: 0; background: var(--fh-color-primary); border-radius: inherit; transition: width var(--fh-duration-slow) var(--fh-ease-standard); }
+.fh-progress__bar--success { background: var(--fh-color-success); }
+.fh-progress__bar--accent { background: var(--fh-color-accent); }
+
+.fh-spinner {
+  width: 1.25rem; height: 1.25rem;
+  border: 2px solid var(--fh-color-border-strong);
+  border-top-color: var(--fh-color-primary);
+  border-radius: 50%;
+  animation: fh-spin 0.7s linear infinite;
+}
+.fh-spinner--lg { width: 2rem; height: 2rem; border-width: 3px; }
+@keyframes fh-spin { to { transform: rotate(360deg); } }
+
+/* ============================ 19 SKELETON ============================ */
+.fh-skeleton {
+  background: linear-gradient(90deg, var(--fh-color-surface-sunken) 25%, var(--fh-color-border) 37%, var(--fh-color-surface-sunken) 63%);
+  background-size: 400% 100%;
+  border-radius: var(--fh-radius-sm);
+  animation: fh-shimmer 1.4s ease infinite;
+}
+.fh-skeleton--text { height: 0.8em; margin: 0.25em 0; }
+.fh-skeleton--circle { border-radius: 50%; }
+@keyframes fh-shimmer { 0% { background-position: 100% 0; } 100% { background-position: 0 0; } }
+
+/* ============================ 20 DIVIDER ============================ */
+.fh-divider { border: none; border-top: var(--fh-border-width) solid var(--fh-color-border); margin-block: var(--fh-space-4); }
+.fh-divider--label { display: flex; align-items: center; gap: var(--fh-space-3); color: var(--fh-color-text-subtle); font-size: var(--fh-text-xs); text-transform: uppercase; letter-spacing: var(--fh-tracking-wide); }
+.fh-divider--label::before, .fh-divider--label::after { content: ""; flex: 1; border-top: var(--fh-border-width) solid var(--fh-color-border); }
+
+/* ============================ 22 EMPTY / ERROR STATE ============================ */
+/* For no-data, filtered-no-results, error, and access-denied moments. Compose:
+   .fh-empty-state > __icon (inline svg) + __title + __desc + __actions.        */
+.fh-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: var(--fh-space-1);
+  padding: var(--fh-space-12) var(--fh-space-6);
+  background: var(--fh-color-surface);
+  border: var(--fh-border-width) solid var(--fh-color-border);
+  border-radius: var(--fh-radius-lg);
+}
+.fh-empty-state__icon { color: var(--fh-color-text-subtle); margin-bottom: var(--fh-space-2); }
+.fh-empty-state__icon svg { width: 28px; height: 28px; display: block; }
+.fh-empty-state__title {
+  font-family: var(--fh-font-heading);
+  font-weight: var(--fh-weight-semibold);
+  color: var(--fh-color-text);
+}
+.fh-empty-state__desc { margin: 0; max-width: 36rem; font-size: var(--fh-text-sm); color: var(--fh-color-text-muted); }
+.fh-empty-state__actions { display: flex; flex-wrap: wrap; justify-content: center; gap: var(--fh-space-2); margin-top: var(--fh-space-4); }
+.fh-empty-state--plain { background: transparent; border: none; }          /* inside a card that already frames it */
+.fh-empty-state--page { padding: var(--fh-space-20) var(--fh-space-6); }   /* full-page moments (404, access denied) */
+.fh-empty-state--danger .fh-empty-state__icon { color: var(--fh-color-danger); }  /* error tone */
+
+/* ============================ 23 TOAST ============================ */
+/* Transient async feedback. The DS ships the look; showing/dismissing/stacking is
+   consumer JS. Wrap toasts in a fixed .fh-toaster (bottom-right), or render a bare
+   .fh-toast in-flow for inline/demo use. Left accent + icon colour by variant.    */
+.fh-toaster {
+  position: fixed;
+  bottom: var(--fh-space-4);
+  right: var(--fh-space-4);
+  z-index: var(--fh-z-toast);
+  display: flex;
+  flex-direction: column;
+  gap: var(--fh-space-2);
+  width: min(380px, calc(100vw - 2 * var(--fh-space-4)));
+}
+.fh-toast {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--fh-space-3);
+  padding: var(--fh-space-3) var(--fh-space-4);
+  background: var(--fh-color-surface-raised);
+  color: var(--fh-color-text);
+  border: var(--fh-border-width) solid var(--fh-color-border);
+  border-left: 3px solid var(--fh-color-info);
+  border-radius: var(--fh-radius-md);
+  box-shadow: var(--fh-shadow-lg);
+  animation: fh-toast-in var(--fh-duration-base) var(--fh-ease-emphasized);
+}
+.fh-toast__icon { flex: none; display: inline-flex; margin-top: 0.1em; color: var(--fh-color-info); }
+.fh-toast__icon svg { width: 18px; height: 18px; display: block; }
+.fh-toast__body { flex: 1; font-size: var(--fh-text-sm); line-height: var(--fh-leading-snug); }
+.fh-toast__title { font-family: var(--fh-font-heading); font-weight: var(--fh-weight-bold); }
+.fh-toast__close {
+  flex: none;
+  display: inline-flex;
+  padding: 2px;
+  border-radius: var(--fh-radius-xs);
+  color: var(--fh-color-text-subtle);
+  line-height: 1;
+}
+.fh-toast__close:hover { color: var(--fh-color-text); background: var(--fh-color-surface-sunken); }
+.fh-toast--success { border-left-color: var(--fh-color-success); }
+.fh-toast--success .fh-toast__icon { color: var(--fh-color-success); }
+.fh-toast--warning { border-left-color: var(--fh-color-warning); }
+.fh-toast--warning .fh-toast__icon { color: var(--fh-color-warning-text); }
+.fh-toast--danger { border-left-color: var(--fh-color-danger); }
+.fh-toast--danger .fh-toast__icon { color: var(--fh-color-danger); }
+@keyframes fh-toast-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ============================ 24 CONFIRM DIALOG (modal preset) ============================ */
+/* Destructive/consequential-action confirmation: a narrow, centred fh-modal with a
+   tinted icon badge. Pair the footer's primary action with fh-btn--danger.        */
+.fh-modal--confirm { max-width: 420px; }
+.fh-modal--confirm .fh-modal__body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: var(--fh-space-2);
+}
+.fh-modal--confirm .fh-modal__footer { justify-content: center; background: transparent; border-top: none; padding-top: 0; }
+.fh-modal__badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 3rem;
+  height: 3rem;
+  border-radius: 50%;
+  background: var(--fh-color-danger-subtle);
+  color: var(--fh-color-danger);
+  margin-bottom: var(--fh-space-1);
+}
+.fh-modal__badge svg { width: 22px; height: 22px; display: block; }
+.fh-modal__badge--warning { background: var(--fh-color-warning-subtle); color: var(--fh-color-warning-text); }
+.fh-modal__badge--primary { background: var(--fh-color-primary-subtle); color: var(--fh-color-primary-text); }
+.fh-modal__badge--success { background: var(--fh-color-success-subtle); color: var(--fh-color-success-text); }
+
+/* ============================ 25 STEPPER / APPROVAL PIPELINE ============================ */
+/* Multi-step flows (wizards) and maker-checker pipelines (Uploaded→Verified→Approved→
+   Released). Steps: .is-complete, .is-active, .is-danger (rejected), default = upcoming. */
+.fh-stepper { display: flex; align-items: flex-start; }
+.fh-stepper__step {
+  position: relative;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: var(--fh-space-2);
+  min-width: 0;
+  padding: 0 var(--fh-space-1);
+}
+/* Connector line into each step (reflects progress up to it) */
+.fh-stepper__step::before {
+  content: "";
+  position: absolute;
+  top: 1rem;                       /* centre of the 2rem dot */
+  left: calc(-50% + 1.25rem);
+  right: calc(50% + 1.25rem);
+  height: 2px;
+  background: var(--fh-color-border-strong);
+}
+.fh-stepper__step:first-child::before { display: none; }
+.fh-stepper__dot {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  background: var(--fh-color-surface);
+  border: 2px solid var(--fh-color-border-strong);
+  color: var(--fh-color-text-muted);
+  font-family: var(--fh-font-heading);
+  font-weight: var(--fh-weight-bold);
+  font-size: var(--fh-text-xs);
+}
+.fh-stepper__dot svg { width: 16px; height: 16px; display: block; }
+.fh-stepper__label { font-size: var(--fh-text-xs); font-weight: var(--fh-weight-semibold); color: var(--fh-color-text-muted); }
+.fh-stepper__meta { font-size: var(--fh-text-xs); color: var(--fh-color-text-subtle); }
+.fh-stepper__step.is-complete .fh-stepper__dot,
+.fh-stepper__step.is-complete::before { background: var(--fh-color-success); border-color: var(--fh-color-success); }
+.fh-stepper__step.is-complete .fh-stepper__dot { color: var(--fh-color-success-fg); }
+.fh-stepper__step.is-complete .fh-stepper__label { color: var(--fh-color-text); }
+.fh-stepper__step.is-active::before { background: var(--fh-color-success); }
+.fh-stepper__step.is-active .fh-stepper__dot {
+  background: var(--fh-color-primary);
+  border-color: var(--fh-color-primary);
+  color: var(--fh-color-primary-fg);
+  box-shadow: 0 0 0 4px var(--fh-color-primary-subtle);
+}
+.fh-stepper__step.is-active .fh-stepper__label { color: var(--fh-color-primary-text); }
+.fh-stepper__step.is-danger .fh-stepper__dot {
+  background: var(--fh-color-danger);
+  border-color: var(--fh-color-danger);
+  color: var(--fh-color-danger-fg);
+}
+.fh-stepper__step.is-danger .fh-stepper__label { color: var(--fh-color-danger-text); }
+/* The CLAIM node — a recorded claim riding the pipeline that is deliberately NOT a stage.
+   Maker-checker drawn: the counterparty's recorded answer (a candidate's acceptance form, a
+   parent's "paid", a submitted mark) sits BETWEEN the steps it qualifies as a smaller, DASHED,
+   warning-toned dot — structurally impossible to read as a completed step; the operator's own
+   confirm stays the only state change. Born as recruitment's .rec-step-claim (29-Aug-2026),
+   promoted 30-Aug-2026. Keep it an EXTRA <li class="fh-stepper__step fh-stepper__step--claim">
+   between real steps, present only while the claim is what the pipeline waits on; never add it
+   to the stage machine itself. The margin recentres the smaller dot on the 2rem dots'
+   connector line ((2 − 1.35) / 2). */
+.fh-stepper__step--claim .fh-stepper__dot {
+  width: 1.35rem;
+  height: 1.35rem;
+  margin-top: 0.325rem;
+  background: var(--fh-color-warning-subtle);
+  border: 2px dashed var(--fh-color-warning-hover);
+  color: var(--fh-color-warning-subtle-fg);
+}
+.fh-stepper__step--claim .fh-stepper__label { color: var(--fh-color-warning-subtle-fg); }
+
+/* ============================ 26 PERSON CELL ============================ */
+/* Identity block for people lists: <span class="fh-person"><span class="fh-avatar">…</span>
+   <span class="fh-person__info"><span class="fh-person__name">…</span>
+   <span class="fh-person__meta">…</span></span></span> */
+.fh-person { display: inline-flex; align-items: center; gap: var(--fh-space-3); min-width: 0; max-width: 100%; }
+.fh-person__info { display: flex; flex-direction: column; min-width: 0; line-height: var(--fh-leading-snug); }
+.fh-person__name {
+  font-weight: var(--fh-weight-semibold);
+  color: var(--fh-color-text);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.fh-person__meta {
+  font-size: var(--fh-text-xs);
+  color: var(--fh-color-text-muted);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+
+/* ============================ 27 ROW SELECTION + BULK-ACTION BAR ============================ */
+/* Give the checkbox column .fh-table__check; mark selected rows with .is-selected.
+   Render .fh-bulkbar (usually between toolbar and table) while a selection exists. */
+.fh-table__check { width: 2.5rem; }
+.fh-table__check .fh-check { vertical-align: middle; }
+.fh-table tbody tr.is-selected,
+.fh-table--striped tbody tr.is-selected,
+.fh-table--hover tbody tr.is-selected:hover { background: var(--fh-color-primary-subtle); }
+.fh-bulkbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--fh-space-3);
+  padding: var(--fh-space-2) var(--fh-space-4);
+  background: var(--fh-color-primary-subtle);
+  border: var(--fh-border-width) solid var(--fh-color-primary-border);
+  border-radius: var(--fh-radius-md);
+  color: var(--fh-color-primary-subtle-fg);
+  font-size: var(--fh-text-sm);
+}
+.fh-bulkbar__count { font-weight: var(--fh-weight-bold); }
+.fh-bulkbar__spacer { margin-left: auto; }
+
+/* ============================ 28 GRADE CHIP + GRADE GRID ============================ */
+/* IB-style 1–7 achievement chips on the brand-blue ramp (1 = red-tinted fail; dark
+   text ≤4, white ≥5 — promoted from the dp-results pilot). Use in results grids,
+   report sheets, gradebooks. .fh-grade--na = not assessed.                          */
+.fh-grade {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.75rem;
+  height: 1.75rem;
+  padding: 0 0.4rem;
+  border-radius: var(--fh-radius-sm);
+  font-family: var(--fh-font-heading);
+  font-weight: var(--fh-weight-bold);
+  font-size: var(--fh-text-sm);
+  font-variant-numeric: tabular-nums;
+  background: var(--fh-color-surface-sunken);
+  color: var(--fh-color-text);
+}
+.fh-grade--1 { background: var(--fh-red-200);  color: var(--fh-neutral-900); }
+.fh-grade--2 { background: var(--fh-blue-100); color: var(--fh-neutral-900); }
+.fh-grade--3 { background: var(--fh-blue-200); color: var(--fh-neutral-900); }
+.fh-grade--4 { background: var(--fh-blue-300); color: var(--fh-neutral-900); }
+.fh-grade--5 { background: var(--fh-blue-500); color: #fff; }
+.fh-grade--6 { background: var(--fh-blue-600); color: #fff; }
+.fh-grade--7 { background: var(--fh-blue-700); color: #fff; }
+.fh-grade--na { background: transparent; border: 1px dashed var(--fh-color-border-strong); color: var(--fh-color-text-subtle); }
+
+/* Centered numeric grid cells (grades, marks) */
+.fh-table__center { text-align: center; }
+
+/* Frozen first column — for wide grids (students × subjects) inside the scrolling
+   .fh-table-wrap. Backgrounds must be opaque, so striped/hover/product re-tint it. */
+.fh-table--frozen-first th:first-child,
+.fh-table--frozen-first td:first-child {
+  position: sticky;
+  left: 0;
+  z-index: 2;
+  background: var(--fh-color-surface);
+  box-shadow: inset -1px 0 0 var(--fh-color-border);
+}
+.fh-table--frozen-first thead th:first-child { z-index: 3; background: var(--fh-color-surface-sunken); }
+.fh-table--striped.fh-table--frozen-first tbody tr:nth-child(even) td:first-child { background: var(--fh-color-surface-sunken); }
+.fh-table--hover.fh-table--frozen-first tbody tr:hover td:first-child { background: var(--fh-color-primary-subtle); }
+.fh-table--hover.fh-table--frozen-first tbody tr.is-selected td:first-child { background: var(--fh-color-primary-subtle); }
+[data-profile="product"] .fh-table--frozen-first thead th:first-child { background: var(--fh-color-primary-subtle); }
+
+/* Segmented "active" state for fh-btn-group choices (term switcher, view toggles) */
+.fh-btn.is-active {
+  background: var(--fh-color-primary-subtle);
+  border-color: var(--fh-color-primary-border);
+  color: var(--fh-color-primary-text);
+}
+
+/* ============================ 29 ATTENDANCE MARK ============================ */
+/* Tap-friendly per-student toggle for daily marking: <button class="fh-mark
+   fh-mark--present">P</button>. States: --present --absent --late; base = unmarked. */
+.fh-mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 50%;
+  border: var(--fh-border-width-2) solid var(--fh-color-border-strong);
+  background: var(--fh-color-surface);
+  color: var(--fh-color-text-muted);
+  font-family: var(--fh-font-heading);
+  font-weight: var(--fh-weight-bold);
+  font-size: var(--fh-text-sm);
+  transition: background var(--fh-duration-fast), border-color var(--fh-duration-fast), color var(--fh-duration-fast);
+}
+.fh-mark:focus-visible { outline: none; box-shadow: var(--fh-ring); }
+.fh-mark--present { background: var(--fh-color-success); border-color: var(--fh-color-success); color: var(--fh-color-success-fg); }
+.fh-mark--absent  { background: var(--fh-color-danger);  border-color: var(--fh-color-danger);  color: var(--fh-color-danger-fg); }
+.fh-mark--late    { background: var(--fh-color-warning); border-color: var(--fh-color-warning); color: var(--fh-color-warning-fg); }
+
+/* ============================ 30 CALENDAR GRID ============================ */
+/* Month view: .fh-cal > .fh-cal__head (7 weekday cells) + .fh-cal__grid (7-col day
+   cells). Day-type tints for the school calendar (holiday / break / event). */
+.fh-cal { border: var(--fh-border-width) solid var(--fh-color-border); border-radius: var(--fh-radius-lg); overflow: hidden; background: var(--fh-color-surface); }
+.fh-cal__head, .fh-cal__grid { display: grid; grid-template-columns: repeat(7, 1fr); }
+.fh-cal__head > * {
+  padding: var(--fh-space-2) var(--fh-space-3);
+  background: var(--fh-color-surface-sunken);
+  border-bottom: var(--fh-border-width) solid var(--fh-color-border);
+  font-family: var(--fh-font-heading);
+  font-size: var(--fh-text-xs);
+  font-weight: var(--fh-weight-semibold);
+  letter-spacing: var(--fh-tracking-wide);
+  text-transform: uppercase;
+  color: var(--fh-color-text-muted);
+}
+.fh-cal__day {
+  min-height: 5.5rem;
+  padding: var(--fh-space-2) var(--fh-space-3);
+  border-bottom: var(--fh-border-width) solid var(--fh-color-border);
+  border-right: var(--fh-border-width) solid var(--fh-color-border);
+  font-size: var(--fh-text-xs);
+}
+.fh-cal__grid > :nth-child(7n) { border-right: none; }
+.fh-cal__grid > :nth-last-child(-n + 7) { border-bottom: none; }
+.fh-cal__date { font-weight: var(--fh-weight-semibold); color: var(--fh-color-text); }
+.fh-cal__day.is-outside { background: var(--fh-color-surface-sunken); }
+.fh-cal__day.is-outside .fh-cal__date { color: var(--fh-color-text-subtle); font-weight: var(--fh-weight-regular); }
+.fh-cal__day.is-today .fh-cal__date {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 1.5rem; height: 1.5rem; border-radius: 50%;
+  background: var(--fh-color-primary); color: var(--fh-color-primary-fg);
+}
+.fh-cal__day--holiday { background: var(--fh-color-danger-subtle); }
+.fh-cal__day--break   { background: var(--fh-color-warning-subtle); }
+.fh-cal__day--event   { background: var(--fh-color-primary-subtle); }
+.fh-cal__tag { display: block; margin-top: 2px; font-size: 0.7rem; color: var(--fh-color-text-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* ============================ 31 MAP FRAME ============================ */
+/* DS chrome around a third-party map canvas (Leaflet/Google/MapLibre): the map
+   mounts in __canvas; toolbar / legend / side panel float above it. */
+.fh-mapframe { position: relative; border: var(--fh-border-width) solid var(--fh-color-border); border-radius: var(--fh-radius-lg); overflow: hidden; }
+.fh-mapframe__canvas { min-height: 24rem; background: var(--fh-color-surface-sunken); }
+.fh-mapframe__toolbar { position: absolute; top: var(--fh-space-3); left: var(--fh-space-3); z-index: 2; display: flex; gap: var(--fh-space-2); }
+.fh-mapframe__panel {
+  position: absolute; top: var(--fh-space-3); right: var(--fh-space-3); bottom: var(--fh-space-3); z-index: 2;
+  width: min(320px, 44%);
+  overflow-y: auto;
+  background: var(--fh-color-surface);
+  border: var(--fh-border-width) solid var(--fh-color-border);
+  border-radius: var(--fh-radius-lg);
+  box-shadow: var(--fh-shadow-lg);
+}
+.fh-mapframe__legend {
+  position: absolute; bottom: var(--fh-space-3); left: var(--fh-space-3); z-index: 2;
+  display: flex; gap: var(--fh-space-2); flex-wrap: wrap;
+}
+@media (max-width: 900px) {
+  .fh-mapframe__panel { position: static; width: auto; box-shadow: none; border: none; border-top: var(--fh-border-width) solid var(--fh-color-border); border-radius: 0; }
+}
+
+/* ============================ 32 ACTING-AS IDENTITY ============================ */
+/* Who am I acting as on this role-scoped screen (promoted from the Nucleus console).
+   <div class="fh-actingas"><span class="fh-actingas__label">Acting as</span>
+   <span class="fh-actingas__name">…</span><span class="fh-actingas__role">…</span></div> */
+.fh-actingas { display: flex; flex-direction: column; text-align: right; line-height: var(--fh-leading-snug); }
+.fh-actingas__label {
+  font-size: var(--fh-text-xs);
+  text-transform: uppercase;
+  letter-spacing: var(--fh-tracking-wide);
+  color: var(--fh-color-text-subtle);
+}
+.fh-actingas__name { font-weight: var(--fh-weight-semibold); color: var(--fh-color-text); }
+.fh-actingas__role { font-size: var(--fh-text-sm); color: var(--fh-color-text-muted); }
+
+/* ============================ 33 DANGER ZONE CARD ============================ */
+/* Destructive settings group (offboard tenant, delete records). Pair actions with
+   fh-btn--danger + fh-modal--confirm. */
+.fh-card--danger { border-color: var(--fh-color-danger-border); }
+.fh-card--danger .fh-card__header { background: var(--fh-color-danger-subtle); border-bottom-color: var(--fh-color-danger-border); }
+.fh-card--danger .fh-card__title { color: var(--fh-color-danger-text); }
+
+/* Small spinner for inline/button use */
+.fh-spinner--sm { width: 1rem; height: 1rem; border-width: 2px; }
+
+/* ============================ 34 TREE (org hierarchy) ============================ */
+/* The org tree — hierarchy views and node pickers (postings, role scopes, org-scope).
+   Branches are a plain <details open> with a <summary class="fh-tree__row">; leaves are a plain
+   .fh-tree__row. The disclosure needs NO class of its own — `summary.fh-tree__row` below kills the
+   native marker and sets the cursor, and `details[open] > summary .fh-tree__chev` does the rotation.
+   This comment used to advertise a `.fh-tree__branch` on the <details>, which this file has never
+   defined; nucleus followed it faithfully and shipped an inert class to production. If you want a
+   hook there, define it first.
+   Rows compose freely: chev svg + .fh-tree__label + .fh-tree__meta + badges/fh-person. */
+.fh-tree { list-style: none; margin: 0; padding: 0; font-size: var(--fh-text-sm); }
+.fh-tree__children {
+  list-style: none;
+  margin: 0 0 0 0.85rem;
+  padding-left: var(--fh-space-4);
+  border-left: 1px solid var(--fh-color-border);   /* indent guide */
+}
+.fh-tree__row {
+  display: flex;
+  align-items: center;
+  gap: var(--fh-space-2);
+  min-width: 0;
+  padding: var(--fh-space-2);
+  border-radius: var(--fh-radius-sm);
+}
+summary.fh-tree__row { cursor: pointer; list-style: none; }
+summary.fh-tree__row::-webkit-details-marker { display: none; }
+.fh-tree__row:hover { background: var(--fh-color-surface-sunken); }
+.fh-tree__row.is-selected { background: var(--fh-color-primary-subtle); }
+.fh-tree__row.is-selected .fh-tree__label { color: var(--fh-color-primary-text); }
+.fh-tree__chev { flex: none; color: var(--fh-color-text-subtle); transition: transform var(--fh-duration-fast) var(--fh-ease-standard); }
+.fh-tree__chev svg { width: 14px; height: 14px; display: block; }
+details[open] > summary .fh-tree__chev { transform: rotate(90deg); }
+.fh-tree__label {
+  font-weight: var(--fh-weight-medium);
+  color: var(--fh-color-text);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.fh-tree__meta { flex: none; font-size: var(--fh-text-xs); color: var(--fh-color-text-subtle); }
+
+/* ============================ 35 BOARD (pipeline / kanban) ============================ */
+/* Multi-item pipeline view (recruitment stages, task lanes). Drag-and-drop is consumer
+   JS — cards/columns expose .is-dragging / .is-over state hooks. Cards usually contain
+   a .fh-person + badges. Pair with .fh-stepper for the single-item journey view. */
+.fh-board {
+  display: flex;
+  gap: var(--fh-space-3);
+  align-items: flex-start;
+  overflow-x: auto;
+  padding-bottom: var(--fh-space-2);
+}
+.fh-board__col {
+  flex: 0 0 264px;
+  background: var(--fh-color-surface-sunken);
+  border: var(--fh-border-width) solid var(--fh-color-border);
+  border-radius: var(--fh-radius-lg);
+}
+.fh-board__head {
+  display: flex;
+  align-items: center;
+  gap: var(--fh-space-2);
+  padding: var(--fh-space-3);
+  font-family: var(--fh-font-heading);
+  font-weight: var(--fh-weight-semibold);
+  font-size: var(--fh-text-sm);
+  color: var(--fh-color-text);
+}
+.fh-board__cards {
+  display: flex;
+  flex-direction: column;
+  gap: var(--fh-space-2);
+  padding: 0 var(--fh-space-2) var(--fh-space-2);
+  min-height: var(--fh-space-10);   /* an empty column is still a drop target */
+}
+.fh-board__card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--fh-space-2);
+  padding: var(--fh-space-3);
+  background: var(--fh-color-surface);
+  border: var(--fh-border-width) solid var(--fh-color-border);
+  border-radius: var(--fh-radius-md);
+  box-shadow: var(--fh-shadow-xs);
+}
+.fh-board__card:hover { box-shadow: var(--fh-shadow-sm); }
+.fh-board__card.is-dragging { opacity: 0.6; box-shadow: var(--fh-shadow-lg); }
+.fh-board__col.is-over { border-color: var(--fh-color-primary); background: var(--fh-color-primary-subtle); }
+
+/* ============================ 36 TIMELINE (activity history) ============================ */
+/* Candidate events, leave history, audit trails on detail pages. Dot tone via
+   item modifiers --primary/--success/--warning/--danger; default = neutral. */
+.fh-timeline { list-style: none; margin: 0; padding: 0; }
+.fh-timeline__item { position: relative; padding: 0 0 var(--fh-space-5) var(--fh-space-6); }
+.fh-timeline__item::before {           /* connector rail */
+  content: "";
+  position: absolute;
+  left: 0.4rem;
+  top: 1.15rem;
+  bottom: 0;
+  width: 2px;
+  background: var(--fh-color-border);
+}
+.fh-timeline__item:last-child { padding-bottom: 0; }
+.fh-timeline__item:last-child::before { display: none; }
+.fh-timeline__item::after {            /* dot */
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.3rem;
+  width: 0.9rem;
+  height: 0.9rem;
+  border-radius: 50%;
+  background: var(--fh-color-surface);
+  border: 2px solid var(--fh-color-border-strong);
+}
+.fh-timeline__item--primary::after { border-color: var(--fh-color-primary); background: var(--fh-color-primary); }
+.fh-timeline__item--success::after { border-color: var(--fh-color-success); background: var(--fh-color-success); }
+.fh-timeline__item--warning::after { border-color: var(--fh-color-warning); background: var(--fh-color-warning); }
+.fh-timeline__item--danger::after  { border-color: var(--fh-color-danger);  background: var(--fh-color-danger); }
+.fh-timeline__time { font-size: var(--fh-text-xs); color: var(--fh-color-text-subtle); }
+.fh-timeline__title { font-size: var(--fh-text-sm); font-weight: var(--fh-weight-semibold); color: var(--fh-color-text); }
+.fh-timeline__body { font-size: var(--fh-text-sm); color: var(--fh-color-text-muted); }
+
+/* ============================ 37 FACE GRID (photo roster) ============================ */
+/* The teacher-facing people wall: attendance-by-faces, "who's in my class", staff
+   rosters, pickup/manifest verification. A tile shows the photo when one exists AND
+   consent allows; with no <img> the same markup renders the initials fallback — the
+   consent-off path is a first-class state, not an error.
+     <button class="fh-facegrid__tile fh-facegrid__tile--present">
+       <span class="fh-facegrid__photo">AS<img src="…" alt=""></span>
+       <span class="fh-facegrid__name">Aanya Shah</span>
+       <span class="fh-facegrid__meta">G5-A</span>
+       <span class="fh-facegrid__mark">P</span>
+     </button>
+   Marking states reuse the fh-mark tones (--present --absent --late); .is-selected is
+   the picker state. Tiles are <button>s when they mark, <a>s when they navigate. */
+.fh-facegrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(7.5rem, 1fr));
+  gap: var(--fh-space-3);
+}
+.fh-facegrid__tile {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--fh-space-1);
+  padding: var(--fh-space-3) var(--fh-space-2);
+  background: var(--fh-color-surface);
+  border: var(--fh-border-width) solid var(--fh-color-border);
+  border-radius: var(--fh-radius-md);
+  box-shadow: var(--fh-shadow-xs);
+  font: inherit;                                   /* neutralise button/link UA styles */
+  color: var(--fh-color-text);
+  text-align: center;
+  text-decoration: none;
+  cursor: pointer;
+  transition: box-shadow var(--fh-duration-fast) var(--fh-ease-standard),
+              border-color var(--fh-duration-fast) var(--fh-ease-standard),
+              transform var(--fh-duration-fast) var(--fh-ease-standard);
+}
+.fh-facegrid__tile:hover { box-shadow: var(--fh-shadow-sm); border-color: var(--fh-color-border-strong); }
+.fh-facegrid__tile:focus-visible { outline: none; box-shadow: var(--fh-ring); }
+.fh-facegrid__photo {
+  position: relative;
+  width: 4.25rem;
+  height: 4.25rem;
+  border-radius: 50%;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--fh-color-primary-subtle);
+  color: var(--fh-color-primary);
+  font-family: var(--fh-font-heading);
+  font-weight: var(--fh-weight-bold);
+  font-size: var(--fh-text-lg);
+  border: 2px solid transparent;                   /* the state ring colours this */
+}
+.fh-facegrid__photo img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.fh-facegrid__name { font-size: var(--fh-text-sm); font-weight: var(--fh-weight-semibold); line-height: 1.25; }
+.fh-facegrid__meta { font-size: var(--fh-text-xs); color: var(--fh-color-text-subtle); }
+/* Corner mark: the explicit state glyph (put a letter/svg inside; name stays adjacent) */
+.fh-facegrid__mark {
+  position: absolute;
+  top: var(--fh-space-2);
+  right: var(--fh-space-2);
+  display: none;                                   /* revealed by a state modifier */
+  align-items: center;
+  justify-content: center;
+  width: 1.4rem;
+  height: 1.4rem;
+  border-radius: 50%;
+  font-size: var(--fh-text-xs);
+  font-weight: var(--fh-weight-bold);
+  border: 2px solid var(--fh-color-surface);
+}
+.fh-facegrid__tile--present .fh-facegrid__photo { border-color: var(--fh-color-success); }
+.fh-facegrid__tile--present .fh-facegrid__mark  { display: inline-flex; background: var(--fh-color-success); color: var(--fh-color-success-fg); }
+.fh-facegrid__tile--absent  .fh-facegrid__photo { border-color: var(--fh-color-danger); }
+.fh-facegrid__tile--absent  .fh-facegrid__mark  { display: inline-flex; background: var(--fh-color-danger); color: var(--fh-color-danger-fg); }
+.fh-facegrid__tile--late    .fh-facegrid__photo { border-color: var(--fh-color-warning); }
+.fh-facegrid__tile--late    .fh-facegrid__mark  { display: inline-flex; background: var(--fh-color-warning); color: var(--fh-color-warning-fg); }
+.fh-facegrid__tile.is-selected {
+  border-color: var(--fh-color-primary);
+  background: var(--fh-color-primary-subtle);
+  box-shadow: 0 0 0 1px var(--fh-color-primary);
+}
+/* Density: a wall of 30 faces should fit a tablet without scrolling forever */
+[data-density="compact"] .fh-facegrid { grid-template-columns: repeat(auto-fill, minmax(6.25rem, 1fr)); gap: var(--fh-space-2); }
+[data-density="compact"] .fh-facegrid__photo { width: 3.25rem; height: 3.25rem; font-size: var(--fh-text-base); }
+/* Beacon: the same quiet hover lift cards get */
+[data-profile="product"] .fh-facegrid__tile:hover { transform: translateY(-1px); box-shadow: var(--fh-shadow-md); }
+
+/* ============================ 38 LOCK (month-end / immutable records) ============================ */
+/* The immutability language for governed records. HR's per-campus month-end (StaffLock →
+   HRLock) and payroll's draft→review→approve→lock→superseded runs speak one vocabulary —
+   semantic states, not module names, so consumers map their tiers onto:
+     --open        writable; nothing locked yet (an open month, a draft run)
+     --soft        first-tier lock — a HEALTHY lifecycle state, never warning-amber
+                   (StaffLock: staff/TL writes blocked, campus HR may still act)
+     --hard        the final lock; the record is now an immutable artifact
+                   (HRLock after payroll; a locked, checksummed run)
+     --superseded  replaced by a later record — the original is preserved, never edited
+   .fh-lock = the state chip (BYO padlock svg in the icon slot, per the icon convention);
+   .fh-lockbar = the page banner that flips a screen to "frozen artifact" (title +
+   provenance + checksum + trailing actions); .fh-frozen = the content veil beneath it;
+   .fh-lockmatrix = the campus × month close board. CSS is only the language — locks are
+   ENFORCED in the write plane; consumers still disable controls inside .fh-frozen. */
+.fh-lock {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--fh-space-1);
+  padding: 2px var(--fh-space-2);
+  border-radius: var(--fh-radius-full);
+  border: var(--fh-border-width) solid var(--fh-color-border);
+  background: var(--fh-color-surface);
+  color: var(--fh-color-text-muted);
+  font-size: var(--fh-text-xs);
+  font-weight: var(--fh-weight-semibold);
+  white-space: nowrap;
+}
+.fh-lock__icon { display: inline-flex; }
+.fh-lock__icon svg { width: 12px; height: 12px; display: block; }
+.fh-lock--soft { background: var(--fh-color-primary-subtle); border-color: var(--fh-color-primary-border); color: var(--fh-color-primary-text); }
+.fh-lock--hard { background: var(--fh-color-primary); border-color: var(--fh-color-primary); color: var(--fh-color-primary-fg); }
+.fh-lock--superseded { background: var(--fh-color-surface-sunken); border-style: dashed; color: var(--fh-color-text-subtle); }
+
+/* --- The page banner: put it above the frozen content, first thing under the H1 ------- */
+.fh-lockbar {
+  display: flex;
+  align-items: center;
+  gap: var(--fh-space-3);
+  padding: var(--fh-space-3) var(--fh-space-4);
+  border-radius: var(--fh-radius-lg);
+  border: var(--fh-border-width) solid var(--fh-color-border);
+  background: var(--fh-color-surface-sunken);
+}
+.fh-lockbar__icon {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 50%;
+  border: 2px solid var(--fh-color-border-strong);
+  color: var(--fh-color-text-muted);
+}
+.fh-lockbar__icon svg { width: 18px; height: 18px; display: block; }
+.fh-lockbar__body { min-width: 0; }
+.fh-lockbar__title { font-family: var(--fh-font-heading); font-weight: var(--fh-weight-semibold); font-size: var(--fh-text-sm); color: var(--fh-color-text); }
+.fh-lockbar__meta { font-size: var(--fh-text-xs); color: var(--fh-color-text-muted); }
+/* The checksum is evidence, not decoration — mono, quiet, copyable */
+.fh-lockbar__checksum {
+  font-family: var(--fh-font-mono);
+  font-size: var(--fh-text-xs);
+  padding: 1px var(--fh-space-2);
+  border-radius: var(--fh-radius-sm);
+  border: var(--fh-border-width) solid currentColor;
+  opacity: 0.8;
+}
+.fh-lockbar__actions { margin-left: auto; flex: none; display: flex; align-items: center; gap: var(--fh-space-2); }
+.fh-lockbar--soft { background: var(--fh-color-primary-subtle); border-color: var(--fh-color-primary-border); }
+.fh-lockbar--soft .fh-lockbar__icon { color: var(--fh-color-primary); border-color: var(--fh-color-primary-border); }
+.fh-lockbar--soft .fh-lockbar__title { color: var(--fh-color-primary-text); }
+/* hard: inverse chrome — the banner reads as the system speaking, not page content */
+.fh-lockbar--hard { background: var(--fh-color-inverse-surface); border-color: var(--fh-color-inverse-surface); color: var(--fh-color-inverse-fg); }
+.fh-lockbar--hard .fh-lockbar__title { color: inherit; }
+.fh-lockbar--hard .fh-lockbar__meta { color: inherit; opacity: 0.75; }
+.fh-lockbar--hard .fh-lockbar__icon { color: inherit; border-color: currentColor; opacity: 0.9; }
+.fh-lockbar--superseded { background: var(--fh-color-surface-sunken); border-style: dashed; }
+.fh-lockbar--superseded .fh-lockbar__title { color: var(--fh-color-text-muted); }
+.fh-lockbar--superseded .fh-lockbar__icon { border-style: dashed; }
+
+/* --- Frozen content veil (visual only; consumers disable the controls) ---------------- */
+.fh-frozen { background: var(--fh-color-surface-sunken); }
+.fh-frozen :is(.fh-input, .fh-select, .fh-textarea) {
+  background: var(--fh-color-surface-sunken);
+  color: var(--fh-color-text-muted);
+  box-shadow: none;
+}
+.fh-frozen .fh-table tbody td { color: var(--fh-color-text-muted); }
+
+/* --- Close board: campuses × months; independent per campus (HR spec §20.11) ----------
+   Column count via the custom property: <div class="fh-lockmatrix" style="--fh-lockmatrix-cols:12">
+   Cells are <button>s when they drill down, <span>s when read-only. .is-current rings the
+   month being closed; --na (a future month) is a dotted placeholder, not a state. */
+.fh-lockmatrix {
+  --fh-lockmatrix-cols: 12;
+  display: grid;
+  grid-template-columns: max-content repeat(var(--fh-lockmatrix-cols), minmax(2.1rem, 1fr));
+  gap: 3px;
+  align-items: stretch;
+}
+.fh-lockmatrix__collabel {
+  font-size: var(--fh-text-xs);
+  color: var(--fh-color-text-subtle);
+  text-align: center;
+  align-self: end;
+  padding-bottom: 2px;
+}
+.fh-lockmatrix__rowlabel {
+  display: flex;
+  align-items: center;
+  padding-right: var(--fh-space-3);
+  font-size: var(--fh-text-sm);
+  font-weight: var(--fh-weight-medium);
+  color: var(--fh-color-text);
+}
+.fh-lockmatrix__cell {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 2.1rem;
+  padding: 0;
+  border-radius: var(--fh-radius-sm);
+  border: var(--fh-border-width) solid var(--fh-color-border);
+  background: var(--fh-color-surface);
+  font: inherit;                                   /* neutralise button UA styles */
+  font-size: var(--fh-text-xs);
+  font-weight: var(--fh-weight-bold);
+  color: var(--fh-color-text-subtle);
+}
+.fh-lockmatrix__cell svg { width: 13px; height: 13px; display: block; }
+button.fh-lockmatrix__cell { cursor: pointer; }
+button.fh-lockmatrix__cell:hover { border-color: var(--fh-color-border-strong); box-shadow: var(--fh-shadow-xs); }
+button.fh-lockmatrix__cell:focus-visible { outline: none; box-shadow: var(--fh-ring); }
+.fh-lockmatrix__cell--soft { background: var(--fh-color-primary-subtle); border-color: var(--fh-color-primary-border); color: var(--fh-color-primary-text); }
+.fh-lockmatrix__cell--hard { background: var(--fh-color-primary); border-color: var(--fh-color-primary); color: var(--fh-color-primary-fg); }
+.fh-lockmatrix__cell--na { border-style: dotted; background: transparent; color: transparent; }
+.fh-lockmatrix__cell.is-current { box-shadow: 0 0 0 2px var(--fh-color-accent); }
+
+/* Density: a 12-month board on an operational screen */
+[data-density="compact"] .fh-lockmatrix__cell { height: 1.7rem; }
+[data-density="compact"] .fh-lockbar { padding: var(--fh-space-2) var(--fh-space-3); }
+/* Beacon: the hard lockbar deepens to the rail's navy — same family, same authority.
+   Fg pinned to white because the gradient stays navy in BOTH themes (like the sidebar). */
+[data-profile="product"] .fh-lockbar--hard {
+  background: linear-gradient(135deg, #00284D, #001426);
+  border-color: transparent;
+  color: #fff;
+}
+
+/* ============================ 39 VALIDITY (effective-dated timeline) ============================ */
+/* The validity spine for anything valid_from/valid_to: policy versions, statutory bundles,
+   salary structures, CTC history. Segments are RANGES (not the point-events of .fh-timeline);
+   validTo is EXCLUSIVE, so adjacent segments butt cleanly. Weight each segment by duration
+   with inline flex (<div class="fh-validity__seg …" style="flex:4">). States:
+     --expired      past, ran its course
+     --current      in force on the as-of date (solid — exactly one per lane)
+     --future       future-dated — a NORMAL state (approved today, effective later), never an error
+     --superseded   replaced by a correction — preserved, struck, never edited (pair with 38 LOCK)
+   --open-ended on the last segment = validTo null (dashes into the future). The as-of query
+   marker rides the track via the custom property: style="--fh-validity-asof: 62%".
+   Extra lanes (superseded history under the live lane) are additional __track rows. */
+.fh-validity { display: flex; flex-direction: column; gap: var(--fh-space-2); }
+.fh-validity__track {
+  position: relative;
+  display: flex;
+  gap: 3px;
+  align-items: stretch;
+}
+.fh-validity__seg {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-width: 0;
+  padding: var(--fh-space-2) var(--fh-space-3);
+  border-radius: var(--fh-radius-sm);
+  border: var(--fh-border-width) solid var(--fh-color-border);
+  background: var(--fh-color-surface-sunken);
+  line-height: 1.3;
+}
+.fh-validity__ver {
+  font-family: var(--fh-font-heading);
+  font-weight: var(--fh-weight-semibold);
+  font-size: var(--fh-text-sm);
+  color: var(--fh-color-text);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.fh-validity__range { font-size: var(--fh-text-xs); color: var(--fh-color-text-subtle); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.fh-validity__seg--expired { color: var(--fh-color-text-muted); }
+.fh-validity__seg--expired .fh-validity__ver { color: var(--fh-color-text-muted); }
+.fh-validity__seg--current { background: var(--fh-color-primary); border-color: var(--fh-color-primary); }
+.fh-validity__seg--current .fh-validity__ver { color: var(--fh-color-primary-fg); }
+.fh-validity__seg--current .fh-validity__range { color: var(--fh-color-primary-fg); opacity: 0.8; }
+.fh-validity__seg--future { background: var(--fh-color-surface); border-style: dashed; border-color: var(--fh-color-primary-border); }
+.fh-validity__seg--future .fh-validity__ver { color: var(--fh-color-primary-text); }
+.fh-validity__seg--superseded { border-style: dashed; }
+.fh-validity__seg--superseded .fh-validity__ver { text-decoration: line-through; color: var(--fh-color-text-subtle); }
+.fh-validity__seg--open-ended { border-right-style: dashed; border-top-right-radius: 0; border-bottom-right-radius: 0; }
+/* The as-of marker: "what was the rule on this date?" — a query, not a state */
+.fh-validity__asof {
+  position: absolute;
+  top: -6px; bottom: -6px;
+  left: var(--fh-validity-asof, 50%);
+  width: 2px;
+  background: var(--fh-color-accent);
+  border-radius: 1px;
+  pointer-events: none;
+}
+.fh-validity__asof::before { /* the pin head */
+  content: "";
+  position: absolute;
+  top: -3px; left: 50%;
+  transform: translateX(-50%);
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--fh-color-accent);
+}
+.fh-validity__asoflabel {
+  align-self: flex-start;
+  font-size: var(--fh-text-xs);
+  font-weight: var(--fh-weight-semibold);
+  color: var(--fh-color-text-muted);
+  padding-left: var(--fh-space-1);
+  border-left: 3px solid var(--fh-color-accent);
+}
+.fh-validity__lanelabel { font-size: var(--fh-text-xs); color: var(--fh-color-text-subtle); }
+
+/* ============================ 40 PROVENANCE (inherited / overridden values) ============================ */
+/* Answers the two questions every governed-config screen must answer per value:
+   WHERE does this number come from, and MAY I change it here?  Resolution precedence
+   (POL-4): personal deviation ▸ campus tweak ▸ group master — nearest wins; FIXED marks
+   (statutory floors) bind everything, even private agreements.
+   .fh-source  = the provenance chip. Specificity reads as intensity (mirrors 38 LOCK):
+                 --group outline · --campus tinted · --person solid · --fixed ink + padlock.
+                 is-winner marks the layer that resolution picked.
+   .fh-bounds  = the constraint band under a Bounded input (payroll A2: Fixed/Bounded/Open;
+                 overrides are always CLAMPED — is-clamped warns, never errors).
+   .fh-resolve = the layered resolution view: one row per layer, --skip for an absent layer,
+                 is-winner on the nearest-wins row, __final = the served value. */
+.fh-source {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--fh-space-1);
+  padding: 1px var(--fh-space-2);
+  border-radius: var(--fh-radius-full);
+  border: var(--fh-border-width) solid var(--fh-color-border);
+  background: var(--fh-color-surface);
+  font-size: var(--fh-text-xs);
+  font-weight: var(--fh-weight-semibold);
+  color: var(--fh-color-text-muted);
+  white-space: nowrap;
+}
+.fh-source__dot { width: 7px; height: 7px; border-radius: 50%; background: var(--fh-color-border-strong); flex: none; }
+.fh-source__icon { display: inline-flex; }
+.fh-source__icon svg { width: 11px; height: 11px; display: block; }
+.fh-source--campus { background: var(--fh-color-primary-subtle); border-color: var(--fh-color-primary-border); color: var(--fh-color-primary-text); }
+.fh-source--campus .fh-source__dot { background: var(--fh-color-primary); }
+.fh-source--person { background: var(--fh-color-primary); border-color: var(--fh-color-primary); color: var(--fh-color-primary-fg); }
+.fh-source--person .fh-source__dot { background: var(--fh-color-primary-fg); }
+.fh-source--fixed { background: var(--fh-color-inverse-surface); border-color: var(--fh-color-inverse-surface); color: var(--fh-color-inverse-fg); }
+.fh-source.is-winner { box-shadow: 0 0 0 2px var(--fh-color-accent); }
+
+/* --- Bounded input: the allowed window + where the value sits in it -------------------- */
+.fh-bounds { display: flex; flex-direction: column; gap: 2px; margin-top: var(--fh-space-1); }
+.fh-bounds__track {
+  position: relative;
+  height: 6px;
+  border-radius: var(--fh-radius-full);
+  background: var(--fh-color-surface-sunken);
+  border: var(--fh-border-width) solid var(--fh-color-border);
+}
+.fh-bounds__fill { /* the allowed window, inset via inline left/right percentages */
+  position: absolute; top: 0; bottom: 0;
+  border-radius: var(--fh-radius-full);
+  background: var(--fh-color-primary-subtle);
+  border: var(--fh-border-width) solid var(--fh-color-primary-border);
+}
+.fh-bounds__dot {
+  position: absolute; top: 50%;
+  transform: translate(-50%, -50%);
+  width: 12px; height: 12px;
+  border-radius: 50%;
+  background: var(--fh-color-primary);
+  border: 2px solid var(--fh-color-surface);
+  box-shadow: var(--fh-shadow-xs);
+}
+.fh-bounds__dot.is-clamped { background: var(--fh-color-warning); }
+.fh-bounds__labels { display: flex; justify-content: space-between; font-size: var(--fh-text-xs); color: var(--fh-color-text-subtle); }
+.fh-bounds__note { font-size: var(--fh-text-xs); color: var(--fh-color-warning-text); }
+
+/* --- Layered resolution: master ▸ tweak ▸ deviation → the served value ------------------ */
+.fh-resolve { display: flex; flex-direction: column; }
+.fh-resolve__row {
+  display: grid;
+  grid-template-columns: minmax(9rem, max-content) 1fr max-content;
+  gap: var(--fh-space-3);
+  align-items: center;
+  padding: var(--fh-space-2) var(--fh-space-3);
+  border-bottom: var(--fh-border-width) solid var(--fh-color-border);
+  font-size: var(--fh-text-sm);
+}
+.fh-resolve__layer { display: inline-flex; align-items: center; gap: var(--fh-space-2); color: var(--fh-color-text-muted); }
+.fh-resolve__value { font-weight: var(--fh-weight-semibold); color: var(--fh-color-text); font-variant-numeric: tabular-nums; }
+.fh-resolve__note { font-size: var(--fh-text-xs); color: var(--fh-color-text-subtle); text-align: right; }
+.fh-resolve__row--skip .fh-resolve__value,
+.fh-resolve__row--skip .fh-resolve__layer { color: var(--fh-color-text-subtle); font-weight: var(--fh-weight-regular); }
+.fh-resolve__row.is-winner { background: var(--fh-color-primary-subtle); }
+.fh-resolve__row.is-winner .fh-resolve__value { color: var(--fh-color-primary-text); }
+.fh-resolve__final {
+  display: grid;
+  grid-template-columns: minmax(9rem, max-content) 1fr max-content;
+  gap: var(--fh-space-3);
+  align-items: center;
+  padding: var(--fh-space-3);
+  border-top: 2px solid var(--fh-color-primary);
+  font-size: var(--fh-text-sm);
+  font-weight: var(--fh-weight-semibold);
+  color: var(--fh-color-text);
+}
+.fh-resolve__final .fh-resolve__value { font-size: var(--fh-text-lg); color: var(--fh-color-primary-text); }
+
+/* Density: config screens list many governed values */
+[data-density="compact"] .fh-validity__seg { padding: var(--fh-space-1) var(--fh-space-2); }
+[data-density="compact"] .fh-resolve__row { padding: var(--fh-space-1) var(--fh-space-2); }
+
+/* ============================ 41 LEDGER (money at scale) ============================ */
+/* The money-table idiom: payroll registers, fee ledgers/statements, arrears recomputes,
+   credit-minute ledgers, marks tables. Composes onto .fh-table:
+     <table class="fh-table fh-table--ledger">
+   --ledger sets tabular numerals table-wide and gives tfoot the accounting double-rule.
+   Cells:  .fh-table__money (right, nowrap — extend __num for money) ·
+           .fh-table__balance (the DERIVED running-balance column, sunken tint) ·
+           .fh-table__groupstart (left fence starting a column group, e.g. the arrears trio)
+   Rows:   .fh-table__row--subtotal (per-head/per-entity subtotal) · tfoot = the grand total.
+   Inline: .fh-money (amount with a quiet currency slot: <span class="fh-money">
+           <span class="fh-money__cur">₹</span>45,000</span>) — --neg/--pos tint the WHOLE
+           amount (dues vs wallet-credit emphasis); .fh-drcr--dr/--cr = direction letters;
+           .fh-was = the superseded old value (struck); .fh-delta--up/--down = the signed
+           difference (arrears are LABELLED deltas, never in-place edits — pairs with 38/39).
+   Numerals stay ink by default — colour only carries MEANING (direction, delta, credit). */
+.fh-table--ledger { font-variant-numeric: tabular-nums; }
+.fh-table--ledger tbody td { color: var(--fh-color-text); }
+.fh-table__money { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.fh-table__balance {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  background: var(--fh-color-surface-sunken);
+  font-weight: var(--fh-weight-medium);
+}
+.fh-table__groupstart { border-left: var(--fh-border-width) solid var(--fh-color-border-strong); }
+.fh-table__row--subtotal td {
+  border-top: var(--fh-border-width) solid var(--fh-color-border-strong);
+  font-weight: var(--fh-weight-semibold);
+  background: var(--fh-color-surface-sunken);
+}
+/* The grand total wears the classic accounting double rule */
+.fh-table--ledger tfoot td {
+  border-top: 3px double var(--fh-color-border-strong);
+  font-weight: var(--fh-weight-bold);
+  font-family: var(--fh-font-heading);
+}
+
+/* --- Inline money ----------------------------------------------------------------------- */
+.fh-money { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.fh-money__cur { color: var(--fh-color-text-subtle); font-size: 0.85em; margin-right: 1px; }
+.fh-money--neg { color: var(--fh-color-danger-text); }
+.fh-money--neg .fh-money__cur { color: inherit; opacity: 0.7; }
+.fh-money--pos { color: var(--fh-color-success-text); }
+.fh-money--pos .fh-money__cur { color: inherit; opacity: 0.7; }
+
+/* Direction letters: quiet, not badges — the column header already says "Dr / Cr" */
+.fh-drcr { font-size: var(--fh-text-xs); font-weight: var(--fh-weight-bold); letter-spacing: 0.02em; }
+.fh-drcr--dr { color: var(--fh-color-danger-text); }
+.fh-drcr--cr { color: var(--fh-color-success-text); }
+
+/* Old → recomputed → delta (the arrears trio) */
+.fh-was { text-decoration: line-through; color: var(--fh-color-text-subtle); font-variant-numeric: tabular-nums; }
+.fh-delta { font-variant-numeric: tabular-nums; white-space: nowrap; font-weight: var(--fh-weight-semibold); }
+.fh-delta--up { color: var(--fh-color-success-text); }
+.fh-delta--up::before { content: "+"; }
+.fh-delta--down { color: var(--fh-color-danger-text); }
+.fh-delta--down::before { content: "\2212"; }   /* a real minus, not a hyphen */
+
+/* Density + print: registers are long; sheets keep the rules crisp */
+[data-density="compact"] .fh-table--ledger th,
+[data-density="compact"] .fh-table--ledger td { padding-top: 4px; padding-bottom: 4px; }
+.fh-sheet .fh-table--ledger tfoot td { border-top: 3px double var(--fh-neutral-400); }
+
+/* ============================ 42 CAPACITY (used vs allowed, with sanctioned overruns) ============================ */
+/* One meter for "how much of the allowance is spoken for": vacancies (plan/filled/pipeline
+   + hire gate), admission seats (confirmed/held/buffer), comp envelopes (variance where
+   >100% is a legitimate, flagged state), delivery read-counts. THE defining idea: the
+   track's full width is EVERYTHING (cap + overrun); the __gate marker shows where the cap
+   sits, so overrun renders BEYOND the gate as a first-class state — striped, never
+   error-red. Weight segments with inline flex; place the gate with --fh-capacity-gate.
+     <div class="fh-capacity">
+       <div class="fh-capacity__track" style="--fh-capacity-gate:95%">
+         <div class="fh-capacity__seg fh-capacity__seg--filled" style="flex:18"></div>
+         <div class="fh-capacity__seg fh-capacity__seg--soft"   style="flex:2"></div>
+         <div class="fh-capacity__seg fh-capacity__seg--over"   style="flex:1"></div>
+       </div> …legend… </div>
+   Segments: --filled (committed, solid) · --soft (in-flight: pipeline/held, tinted) ·
+   --over (soft overrun past the gate, warning-striped) · --override (an AUDITED
+   exception, navy-striped — someone answered for it). No gate? omit the marker. */
+.fh-capacity { display: flex; flex-direction: column; gap: var(--fh-space-2); }
+.fh-capacity__track {
+  position: relative;
+  display: flex;
+  gap: 2px;
+  height: 14px;
+  border-radius: var(--fh-radius-full);
+  background: var(--fh-color-surface-sunken);
+  border: var(--fh-border-width) solid var(--fh-color-border);
+}
+.fh-capacity__seg { min-width: 4px; }
+.fh-capacity__seg:first-child { border-radius: var(--fh-radius-full) 0 0 var(--fh-radius-full); }
+.fh-capacity__seg:last-child { border-radius: 0 var(--fh-radius-full) var(--fh-radius-full) 0; }
+.fh-capacity__seg--filled { background: var(--fh-color-primary); }
+.fh-capacity__seg--soft { background: var(--fh-color-primary-subtle); box-shadow: inset 0 0 0 1px var(--fh-color-primary-border); }
+.fh-capacity__seg--over {
+  background: repeating-linear-gradient(45deg,
+    var(--fh-color-warning) 0 4px, var(--fh-color-warning-subtle) 4px 8px);
+}
+.fh-capacity__seg--override {
+  background: repeating-linear-gradient(45deg,
+    var(--fh-color-primary) 0 4px, var(--fh-color-primary-subtle) 4px 8px);
+}
+/* The gate: where the sanctioned cap sits — everything past it is exception territory */
+.fh-capacity__gate {
+  position: absolute;
+  top: -5px; bottom: -5px;
+  left: var(--fh-capacity-gate, 100%);
+  width: 2px;
+  background: var(--fh-color-text);
+  border-radius: 1px;
+}
+.fh-capacity__gate::after {
+  content: "";
+  position: absolute;
+  top: -2px; left: 50%;
+  transform: translateX(-50%);
+  border: 4px solid transparent;
+  border-top-color: var(--fh-color-text);
+}
+.fh-capacity__legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--fh-space-3);
+  font-size: var(--fh-text-xs);
+  color: var(--fh-color-text-muted);
+}
+.fh-capacity__key { display: inline-flex; align-items: center; gap: var(--fh-space-1); }
+.fh-capacity__dot { width: 8px; height: 8px; border-radius: 2px; background: var(--fh-color-border-strong); flex: none; }
+.fh-capacity__dot--filled { background: var(--fh-color-primary); }
+.fh-capacity__dot--soft { background: var(--fh-color-primary-subtle); box-shadow: inset 0 0 0 1px var(--fh-color-primary-border); }
+.fh-capacity__dot--over { background: repeating-linear-gradient(45deg, var(--fh-color-warning) 0 2px, var(--fh-color-warning-subtle) 2px 4px); }
+.fh-capacity__dot--override { background: repeating-linear-gradient(45deg, var(--fh-color-primary) 0 2px, var(--fh-color-primary-subtle) 2px 4px); }
+[data-density="compact"] .fh-capacity__track { height: 10px; }
+
+/* ============================ 43 MASKED VALUE (audited reveal) ============================ */
+/* Tier-1 money wherever it renders: payroll register rows, comp worksheets, person
+   records. Native <details> = the whole interaction, no JS:
+     <details class="fh-masked">
+       <summary class="fh-masked__mask">••••••<span class="fh-masked__eye">…svg…</span></summary>
+       <span class="fh-masked__value">₹18,20,000</span>
+       <span class="fh-masked__audit">read audited · R2 §11</span>
+     </details>
+   Opening IS the audited read — the consumer logs it on toggle. The audit note is part
+   of the anatomy on purpose: the reader should feel the read is recorded. */
+.fh-masked { display: inline-flex; align-items: baseline; gap: var(--fh-space-2); }
+.fh-masked__mask {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--fh-space-1);
+  cursor: pointer;
+  list-style: none;
+  letter-spacing: 0.15em;
+  color: var(--fh-color-text-subtle);
+  font-variant-numeric: tabular-nums;
+}
+.fh-masked__mask::-webkit-details-marker { display: none; }
+.fh-masked__eye { display: inline-flex; color: var(--fh-color-primary); }
+.fh-masked__eye svg { width: 14px; height: 14px; display: block; }
+.fh-masked__mask:hover .fh-masked__eye { color: var(--fh-color-primary-hover); }
+.fh-masked__mask:focus-visible { outline: none; box-shadow: var(--fh-ring); border-radius: var(--fh-radius-sm); }
+.fh-masked[open] .fh-masked__mask { display: none; }   /* the mask yields to the value */
+.fh-masked__value { font-weight: var(--fh-weight-semibold); font-variant-numeric: tabular-nums; color: var(--fh-color-text); }
+.fh-masked__audit {
+  font-size: var(--fh-text-xs);
+  color: var(--fh-color-warning-text);
+  white-space: nowrap;
+}
+
+/* ============================ 44 REVIEW (maker-checker diff + pending veil) ============================ */
+/* The ERP's universal governance interaction: a checker judging a maker's change. Two
+   pieces:
+   .fh-diff — the field-level before→after comparison a checker reads. One row per field;
+   mark ONLY what changed with .is-changed (before struck-muted, after tinted-emphasis).
+   Also reads as two-source reconciliation (parsed-vs-authoritative, duplicate-vs-master) —
+   the column headers name the sides. Reason capture composes an ordinary .fh-field below.
+   .fh-pending — the veil on the ORIGINATING record while its change awaits the checker:
+   dashed primary frame + the corner flag; content stays readable, unmistakably provisional. */
+.fh-diff { border: var(--fh-border-width) solid var(--fh-color-border); border-radius: var(--fh-radius-lg); overflow: hidden; }
+.fh-diff__head, .fh-diff__row {
+  display: grid;
+  grid-template-columns: minmax(8rem, 0.8fr) 1fr 1fr;
+  gap: var(--fh-space-3);
+  padding: var(--fh-space-2) var(--fh-space-3);
+  align-items: baseline;
+}
+.fh-diff__head {
+  background: var(--fh-color-surface-sunken);
+  font-size: var(--fh-text-xs);
+  font-weight: var(--fh-weight-semibold);
+  text-transform: uppercase;
+  letter-spacing: var(--fh-tracking-wide);
+  color: var(--fh-color-text-muted);
+}
+.fh-diff__row { border-top: var(--fh-border-width) solid var(--fh-color-border); font-size: var(--fh-text-sm); }
+.fh-diff__field { color: var(--fh-color-text-muted); }
+.fh-diff__before, .fh-diff__after { color: var(--fh-color-text); min-width: 0; overflow-wrap: break-word; }
+.fh-diff__row.is-changed { background: var(--fh-color-surface); }
+.fh-diff__row.is-changed .fh-diff__before { text-decoration: line-through; color: var(--fh-color-text-subtle); }
+.fh-diff__row.is-changed .fh-diff__after {
+  font-weight: var(--fh-weight-semibold);
+  background: var(--fh-color-primary-subtle);
+  border-radius: var(--fh-radius-sm);
+  padding: 1px var(--fh-space-2);
+  justify-self: start;
+}
+/* Reconciliation flavour: a mismatch that needs a HUMAN call, not an approval */
+.fh-diff__row.is-conflict .fh-diff__before,
+.fh-diff__row.is-conflict .fh-diff__after { background: var(--fh-color-warning-subtle); border-radius: var(--fh-radius-sm); padding: 1px var(--fh-space-2); justify-self: start; }
+
+.fh-pending {
+  position: relative;
+  border: 2px dashed var(--fh-color-primary-border);
+  border-radius: var(--fh-radius-lg);
+}
+.fh-pending__flag {
+  position: absolute;
+  top: calc(-1 * var(--fh-space-2));
+  right: var(--fh-space-3);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--fh-space-1);
+  padding: 1px var(--fh-space-2);
+  border-radius: var(--fh-radius-full);
+  background: var(--fh-color-primary);
+  color: var(--fh-color-primary-fg);
+  font-size: var(--fh-text-xs);
+  font-weight: var(--fh-weight-semibold);
+  white-space: nowrap;
+}
+.fh-pending > :not(.fh-pending__flag) { opacity: 0.82; }
+
+/* ============================ 45 WORKLIST (status vocabulary + time bands) ============================ */
+/* ONE status language for every work item — helpdesk tickets, approval queue entries,
+   chase tasks, comms follow-ups. Two independent axes, never conflated:
+     lifecycle  .fh-status--open/--progress/--paused/--resolved/--closed  (where it IS)
+     due-state  .fh-status--due/--overdue/--escalated                     (how LATE it is)
+   The chip is a dot + word; rows/KPIs reuse the same modifier names so a board, a badge
+   and a stat all agree. .fh-worklist = the personal time-banded queue: Overdue → Today →
+   Upcoming band headers, mixed item types, the same chips. */
+.fh-status {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--fh-space-1);
+  font-size: var(--fh-text-xs);
+  font-weight: var(--fh-weight-semibold);
+  color: var(--fh-color-text-muted);
+  white-space: nowrap;
+}
+.fh-status::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--fh-color-border-strong); }
+.fh-status--open::before { background: var(--fh-color-primary); }
+.fh-status--progress::before { background: var(--fh-color-primary); box-shadow: 0 0 0 3px var(--fh-color-primary-subtle); }
+.fh-status--paused::before { background: transparent; border: 2px solid var(--fh-color-border-strong); }
+.fh-status--resolved::before { background: var(--fh-color-success); }
+.fh-status--closed::before { background: var(--fh-color-border-strong); }
+.fh-status--due { color: var(--fh-color-warning-text); }
+.fh-status--due::before { background: var(--fh-color-warning); }
+.fh-status--overdue { color: var(--fh-color-danger-text); }
+.fh-status--overdue::before { background: var(--fh-color-danger); }
+.fh-status--escalated { color: var(--fh-color-danger-text); font-weight: var(--fh-weight-bold); }
+.fh-status--escalated::before { background: var(--fh-color-danger); box-shadow: 0 0 0 3px var(--fh-color-danger-subtle); }
+
+.fh-worklist { display: flex; flex-direction: column; }
+.fh-worklist__band {
+  display: flex;
+  align-items: center;
+  gap: var(--fh-space-2);
+  padding: var(--fh-space-2) var(--fh-space-3);
+  margin-top: var(--fh-space-3);
+  font-size: var(--fh-text-xs);
+  font-weight: var(--fh-weight-bold);
+  text-transform: uppercase;
+  letter-spacing: var(--fh-tracking-wide);
+  color: var(--fh-color-text-muted);
+  border-bottom: 2px solid var(--fh-color-border-strong);
+}
+.fh-worklist__band:first-child { margin-top: 0; }
+.fh-worklist__band--overdue { color: var(--fh-color-danger-text); border-bottom-color: var(--fh-color-danger); }
+.fh-worklist__count { font-weight: var(--fh-weight-semibold); color: inherit; opacity: 0.75; }
+.fh-worklist__item {
+  display: grid;
+  grid-template-columns: max-content 1fr max-content max-content;
+  gap: var(--fh-space-3);
+  align-items: center;
+  padding: var(--fh-space-2) var(--fh-space-3);
+  border-bottom: var(--fh-border-width) solid var(--fh-color-border);
+  font-size: var(--fh-text-sm);
+  color: inherit;
+  text-decoration: none;
+}
+a.fh-worklist__item:hover { background: var(--fh-color-surface-sunken); }
+.fh-worklist__type {
+  font-size: var(--fh-text-xs);
+  font-weight: var(--fh-weight-semibold);
+  color: var(--fh-color-text-subtle);
+  border: var(--fh-border-width) solid var(--fh-color-border);
+  border-radius: var(--fh-radius-sm);
+  padding: 0 var(--fh-space-1);
+}
+.fh-worklist__title { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: var(--fh-weight-medium); color: var(--fh-color-text); }
+.fh-worklist__meta { font-size: var(--fh-text-xs); color: var(--fh-color-text-subtle); }
+.fh-worklist__item--overdue { background: var(--fh-color-danger-subtle); }
+.fh-worklist__item--overdue .fh-worklist__title { color: var(--fh-color-danger-text); }
+[data-density="compact"] .fh-worklist__item { padding-top: 4px; padding-bottom: 4px; }
+
+/* ============================ 46 COMMIT GRID (suggested vs committed cells) ============================ */
+/* The grid archetype where CELLS are the editable unit — the comp-cycle worksheet, the
+   gradebook criterion grid, rota assignment, price matrices. The core distinction the
+   whole pattern exists for: a SYSTEM-SUGGESTED value is not a HUMAN-COMMITTED one, and
+   the eye must tell them apart at a glance across 300 cells:
+     --suggested   the system's proposal — ghost italic, dotted underline ("not yet real")
+     --dirty       edited this session, NOT saved — accent corner, the "unsaved" tension
+     --committed   a human committed it — solid ink, the quiet check
+     (empty)       plain button cell, nothing yet
+   Cells are <button>s (focusable, arrow-key nav is consumer JS). Put the value in
+   __value and the corner mark comes from the modifier. Legend chips reuse the states. */
+.fh-commitgrid { width: 100%; border-collapse: collapse; font-size: var(--fh-text-sm); }
+.fh-commitgrid th {
+  padding: var(--fh-space-2) var(--fh-space-2);
+  font-size: var(--fh-text-xs);
+  font-weight: var(--fh-weight-semibold);
+  text-transform: uppercase;
+  letter-spacing: var(--fh-tracking-wide);
+  color: var(--fh-color-text-muted);
+  background: var(--fh-color-surface-sunken);
+  border: var(--fh-border-width) solid var(--fh-color-border);
+  text-align: center;
+}
+.fh-commitgrid th:first-child, .fh-commitgrid td:first-child {
+  text-align: left;
+  white-space: nowrap;
+  padding-left: var(--fh-space-3);
+  padding-right: var(--fh-space-3);
+}
+.fh-commitgrid td { border: var(--fh-border-width) solid var(--fh-color-border); padding: 0; text-align: center; }
+.fh-commitgrid td:first-child { font-weight: var(--fh-weight-medium); color: var(--fh-color-text); padding-top: 0; padding-bottom: 0; }
+.fh-cgcell {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 2.4rem;
+  padding: var(--fh-space-1) var(--fh-space-2);
+  border: none;
+  background: var(--fh-color-surface);
+  font: inherit;
+  font-variant-numeric: tabular-nums;
+  color: var(--fh-color-text);
+  cursor: pointer;
+}
+.fh-cgcell:hover { background: var(--fh-color-primary-subtle); }
+.fh-cgcell:focus-visible { outline: none; box-shadow: inset var(--fh-ring); z-index: 1; }
+.fh-cgcell--suggested .fh-cgcell__value {
+  font-style: italic;
+  color: var(--fh-color-text-subtle);
+  border-bottom: 1px dotted var(--fh-color-border-strong);
+}
+.fh-cgcell--dirty { background: var(--fh-color-surface); }
+.fh-cgcell--dirty::after {              /* the unsaved corner */
+  content: "";
+  position: absolute;
+  top: 0; right: 0;
+  border: 5px solid transparent;
+  border-top-color: var(--fh-color-accent);
+  border-right-color: var(--fh-color-accent);
+}
+.fh-cgcell--dirty .fh-cgcell__value { font-weight: var(--fh-weight-semibold); }
+.fh-cgcell--committed .fh-cgcell__value { font-weight: var(--fh-weight-semibold); }
+.fh-cgcell--committed::before {         /* the quiet check */
+  content: "";
+  position: absolute;
+  bottom: 3px; right: 4px;
+  width: 8px; height: 5px;
+  border-left: 2px solid var(--fh-color-success);
+  border-bottom: 2px solid var(--fh-color-success);
+  transform: rotate(-45deg);
+}
+/* Row summary cell (live recompute target: totals, averages, envelope impact) */
+.fh-commitgrid__calc {
+  font-variant-numeric: tabular-nums;
+  font-weight: var(--fh-weight-semibold);
+  background: var(--fh-color-surface-sunken);
+  padding: var(--fh-space-1) var(--fh-space-2);
+}
+[data-density="compact"] .fh-cgcell { min-height: 1.9rem; }
+
+/* ============================ 47 REVEAL (generic disclosure) ============================ */
+/* The density kit's primitive (2026-08-10 HRIS audit): anything read-on-demand —
+   methodology, proofs, footnotes, exclusion notes, compressed healthy-majority bands —
+   collapses by default on a native <details>, no JS. THE RULE THAT MAKES IT WORK: the
+   CLOSED summary carries the punchline ("How we know · 30/30 cases match") so most
+   readers never open it. Generalises the shipped <details> idiom of .fh-masked /
+   details.fh-sidebar__group and the tree's own <details> branches.
+     <details class="fh-reveal">
+       <summary class="fh-reveal__summary">How we know
+         <span class="fh-reveal__meta">30/30 discriminating cases match</span></summary>
+       <div class="fh-reveal__body">…</div>
+     </details>
+   --flush (borderless, inside cards / as an expanding table band) · --sm (caption-size). */
+.fh-reveal { border: var(--fh-border-width) solid var(--fh-color-border); border-radius: var(--fh-radius-lg); background: var(--fh-color-surface); }
+.fh-reveal__summary {
+  display: flex; align-items: center; gap: var(--fh-space-2);
+  padding: var(--fh-space-2) var(--fh-space-3);
+  font-size: var(--fh-text-sm); font-weight: var(--fh-weight-medium); color: var(--fh-color-text);
+  cursor: pointer; list-style: none;
+}
+.fh-reveal__summary::-webkit-details-marker { display: none; }
+.fh-reveal__summary::before {
+  content: "▸"; color: var(--fh-color-text-subtle); font-size: 0.8em;
+  transition: transform var(--fh-duration-base) var(--fh-ease-standard);
+}
+.fh-reveal[open] > .fh-reveal__summary::before { transform: rotate(90deg); }
+.fh-reveal__summary:hover { background: var(--fh-color-surface-sunken); }
+.fh-reveal__summary:focus-visible { outline: none; box-shadow: var(--fh-ring); border-radius: var(--fh-radius-sm); }
+.fh-reveal__meta { margin-left: auto; font-size: var(--fh-text-xs); color: var(--fh-color-text-muted); }
+.fh-reveal__body { padding: var(--fh-space-3); border-top: var(--fh-border-width) solid var(--fh-color-border); }
+.fh-reveal--flush { border: 0; border-radius: 0; background: transparent; }
+.fh-reveal--flush > .fh-reveal__body { border-top: 0; padding-inline: 0; }
+.fh-reveal--sm > .fh-reveal__summary { font-size: var(--fh-text-xs); color: var(--fh-color-text-muted); padding: var(--fh-space-1) var(--fh-space-2); }
+[data-density="compact"] .fh-reveal__summary { padding-top: var(--fh-space-1); padding-bottom: var(--fh-space-1); }
+
+/* ============================ 48 SECTION HEAD (the missing rank) ============================ */
+/* The rank between the page title and the card — multi-screenful pages get a spine that
+   survives the scrollbar-flick test. Short NOUN title + count badge + the explanatory
+   clause DEMOTED to a muted description (never fused into one bold sentence). Rhythm is
+   baked in and asymmetric: space above ≥ 2× space below, so sections read as breaks.
+     <div class="fh-sectionhead">
+       <h2 class="fh-sectionhead__title">Formula errors</h2>
+       <span class="fh-badge fh-badge--danger">3 findings</span>
+       <span class="fh-sectionhead__desc">the arithmetic differs from the policy</span>
+     </div>
+   Section chrome must outrank item chrome — cards inside stay quieter than this rule. */
+.fh-sectionhead {
+  display: flex; align-items: baseline; gap: var(--fh-space-3); flex-wrap: wrap;
+  margin: var(--fh-space-10) 0 var(--fh-space-4);
+  padding-bottom: var(--fh-space-2);
+  border-bottom: 2px solid var(--fh-color-border-strong);
+}
+.fh-sectionhead:first-of-type { margin-top: var(--fh-space-6); }
+.fh-sectionhead__title { margin: 0; font-family: var(--fh-font-heading); font-size: var(--fh-text-lg); font-weight: var(--fh-weight-semibold); color: var(--fh-color-text); }
+.fh-sectionhead__desc { font-size: var(--fh-text-sm); color: var(--fh-color-text-muted); }
+.fh-sectionhead__actions { margin-left: auto; }
+[data-density="compact"] .fh-sectionhead { margin: var(--fh-space-8) 0 var(--fh-space-3); }
+
+/* ============================ 49 FINDING (a claim with a size and a proof) ============================ */
+/* The audit-report row: policy variances, fee-audit exceptions, data-quality findings,
+   reconciliation causes. Closed = ONE line the eye can rank: tone rail + claim title
+   (the only bold text) + muted mono ID + a right-aligned impact FIGURE (numbers lead,
+   prose follows — magnitude is never buried mid-sentence). Open = the comparison
+   (.fh-compare or .fh-diff), one muted consequence line, and evidence as a nested
+   .fh-reveal--sm. IDs are quiet mono, never chips; a verdict badge appears on a finding
+   only when its direction DIFFERS from the page verdict (one verdict, once, loudest —
+   an .fh-alert under the stat row); frequency words live in the section head, said once.
+     <details class="fh-finding" open>
+       <summary class="fh-finding__summary">
+         <span class="fh-finding__claim">Bands measured from the shift boundary…</span>
+         <span class="fh-finding__id">VAR-01</span>
+         <span class="fh-finding__figure"><span class="fh-finding__value">388 min</span>
+           <span class="fh-finding__scope">18 people · Jun–Aug</span></span>
+       </summary>
+       <div class="fh-finding__body">…compare · consequence · evidence…</div>
+     </details> */
+.fh-finding {
+  border: var(--fh-border-width) solid var(--fh-color-border);
+  border-left: 4px solid var(--fh-color-danger);
+  border-radius: var(--fh-radius-lg); background: var(--fh-color-surface);
+}
+.fh-finding + .fh-finding { margin-top: var(--fh-space-3); }
+.fh-finding--warning { border-left-color: var(--fh-color-warning); }
+.fh-finding--info { border-left-color: var(--fh-color-info); }
+.fh-finding__summary {
+  display: flex; align-items: center; gap: var(--fh-space-3);
+  padding: var(--fh-space-3) var(--fh-space-4);
+  cursor: pointer; list-style: none;
+}
+.fh-finding__summary::-webkit-details-marker { display: none; }
+.fh-finding__summary:hover { background: var(--fh-color-surface-sunken); }
+.fh-finding__summary:focus-visible { outline: none; box-shadow: var(--fh-ring); border-radius: var(--fh-radius-sm); }
+.fh-finding__summary::before {
+  content: "▸"; color: var(--fh-color-text-subtle); font-size: 0.75em; flex: 0 0 auto;
+  transition: transform var(--fh-duration-base) var(--fh-ease-standard);
+}
+.fh-finding[open] > .fh-finding__summary::before { transform: rotate(90deg); }
+.fh-finding__claim { font-weight: var(--fh-weight-semibold); color: var(--fh-color-text); min-width: 0; }
+.fh-finding__id { font-family: var(--fh-font-mono); font-size: var(--fh-text-xs); color: var(--fh-color-text-subtle); flex: 0 0 auto; }
+.fh-finding__figure { margin-left: auto; text-align: right; flex: 0 0 auto; }
+.fh-finding__value {
+  display: block; font-family: var(--fh-font-heading); font-weight: var(--fh-weight-bold);
+  font-size: var(--fh-text-xl); line-height: 1.1; color: var(--fh-color-danger-text);
+  font-variant-numeric: tabular-nums; letter-spacing: -0.01em;
+}
+.fh-finding--warning .fh-finding__value,
+.fh-finding--info .fh-finding__value { color: var(--fh-color-text); }
+.fh-finding__scope { display: block; font-size: var(--fh-text-xs); color: var(--fh-color-text-muted); }
+.fh-finding__body { padding: 0 var(--fh-space-4) var(--fh-space-4); }
+.fh-finding__body > * + * { margin-top: var(--fh-space-3); }
+.fh-finding__consequence { margin: 0; font-size: var(--fh-text-sm); color: var(--fh-color-text-muted); }
+[data-density="compact"] .fh-finding__summary { padding: var(--fh-space-2) var(--fh-space-3); }
+[data-density="compact"] .fh-finding__value { font-size: var(--fh-text-lg); }
+
+/* ============================ 50 COMPARE (two-sided, sentence grain) ============================ */
+/* The prose sibling of .fh-diff: value-or-field disagreement → .fh-diff (its __head
+   names the sides, .is-conflict marks the dispute); RULE-IN-SENTENCES disagreement →
+   this. Each side names its source in an eyebrow and states the rule as ONE short
+   expression; the differing term wears the toned __mark (same tint family as
+   .fh-diff .is-conflict); the ruling side is tinted is-authoritative. Never two
+   unframed prose columns — the eye cannot diff paragraphs.
+     <div class="fh-compare">
+       <div class="fh-compare__side"><div class="fh-compare__label">The workbook</div>
+         <p>…<span class="fh-compare__mark">from the shift start/end</span>…</p></div>
+       <div class="fh-compare__side is-authoritative"><div class="fh-compare__label">The policy</div>
+         <p>…<span class="fh-compare__mark">from the end of grace</span>…</p>
+         <div class="fh-compare__foot">VK 2026-07-06, estate-wide 2026-08-08.</div></div>
+     </div> */
+.fh-compare { display: grid; grid-template-columns: 1fr 1fr; border: var(--fh-border-width) solid var(--fh-color-border); border-radius: var(--fh-radius-lg); overflow: hidden; }
+.fh-compare__side { padding: var(--fh-space-3) var(--fh-space-4); }
+.fh-compare__side + .fh-compare__side { border-left: var(--fh-border-width) solid var(--fh-color-border); }
+.fh-compare__side.is-authoritative { background: var(--fh-color-primary-subtle); }
+.fh-compare__label {
+  font-size: var(--fh-text-xs); font-weight: var(--fh-weight-semibold);
+  text-transform: uppercase; letter-spacing: var(--fh-tracking-wide);
+  color: var(--fh-color-text-muted); margin-bottom: var(--fh-space-1);
+}
+.fh-compare__side p { margin: 0; font-size: var(--fh-text-sm); color: var(--fh-color-text); }
+.fh-compare__mark { background: var(--fh-color-warning-subtle); border-radius: var(--fh-radius-sm); padding: 0 4px; font-weight: var(--fh-weight-semibold); }
+.fh-compare__foot { margin-top: var(--fh-space-2); font-size: var(--fh-text-xs); color: var(--fh-color-text-subtle); }
+@media (max-width: 640px) {
+  .fh-compare { grid-template-columns: 1fr; }
+  .fh-compare__side + .fh-compare__side { border-left: 0; border-top: var(--fh-border-width) solid var(--fh-color-border); }
+}
+
+/* ============================ 51 KEY-VALUE (structured facts) ============================ */
+/* Any fact with a fixed shape — version, effective date, serial, counts, exclusions —
+   renders as labeled pairs, never as a running sentence. Values take .fh-badge /
+   .fh-chip / .fh-money / .fh-u-tabular inline. Promotes the detail archetype's
+   doc-only KV list to public API.
+     <dl class="fh-kv"><dt>Blank totals</dt><dd>an absent figure, not a zero…</dd></dl> */
+.fh-kv { display: grid; grid-template-columns: max-content 1fr; gap: var(--fh-space-1) var(--fh-space-4); margin: 0; }
+.fh-kv dt { font-size: var(--fh-text-xs); font-weight: var(--fh-weight-semibold); text-transform: uppercase; letter-spacing: var(--fh-tracking-wide); color: var(--fh-color-text-subtle); align-self: baseline; }
+.fh-kv dd { margin: 0; font-size: var(--fh-text-sm); color: var(--fh-color-text); }
+.fh-kv--stacked { grid-template-columns: 1fr; gap: 0 0; }
+.fh-kv--stacked dd { margin-bottom: var(--fh-space-2); }
+
+/* ============================ 52 CHARTS (Tier 1 static) ============================ */
+/* Hand-rolled inline SVG/HTML chart primitives — zero dependency, server-renderable.
+   See react/charts.tsx + react/chart-tooltip.tsx. Tier 2 (interactive/drill-down,
+   echarts-based) is a documented future direction, not built. */
+
+/* Shared no-data mark — fixed size, dashed, never derived from a hidden value. Reuses
+   --fh-color-scale-quality-none ("no result / N/A") rather than a new token. */
+.fh-chart-nodata { background: transparent; border: 1.5px dashed var(--fh-color-scale-quality-none); }
+.fh-chart-mark:focus-visible { outline: 2px solid var(--fh-color-primary); outline-offset: 2px; }
+
+/* GroupedBarChart / BandedHistogram — vertical bar track shared by both (react/charts.tsx's
+   internal BarTrack). Explicit-height track + absolute-positioned fill, avoiding the flexbox
+   %-height gotcha (a flex-1/h-full parent has no definite height for a bar's %). */
+.fh-chart-bars { display: flex; gap: var(--fh-space-3); }
+.fh-chart-bars__group { display: flex; min-width: 0; flex: 1; align-items: flex-end; justify-content: center; gap: 6px; height: 100%; }
+.fh-chart-bar { position: relative; width: 28px; height: 100%; }
+.fh-chart-bar__fill { position: absolute; bottom: 0; left: 0; right: 0; border-radius: var(--fh-radius-sm) var(--fh-radius-sm) 0 0; }
+.fh-chart-bar__fill.fh-chart-nodata { height: 10px; border-radius: 2px; }
+.fh-chart-bar__value { position: absolute; left: -50%; right: -50%; text-align: center; font-size: 10px; color: var(--fh-color-text-muted); white-space: nowrap; }
+.fh-chart-bars__labels { display: flex; gap: var(--fh-space-3); margin-top: var(--fh-space-1); }
+.fh-chart-bars__label { min-width: 0; flex: 1; text-align: center; font-size: var(--fh-text-xs); color: var(--fh-color-text-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* StackedBar (HTML/flex rows) — promotes erp-archetypes.html's doc-hbar idiom into a real component */
+.fh-chart-stack__row { display: flex; align-items: center; gap: var(--fh-space-3); }
+.fh-chart-stack__row + .fh-chart-stack__row { margin-top: var(--fh-space-2); }
+.fh-chart-stack__label { flex: 0 0 10.5rem; font-size: var(--fh-text-sm); color: var(--fh-color-text-muted); text-align: right; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.fh-chart-stack__track { flex: 1; display: flex; gap: 2px; background: var(--fh-color-surface-sunken); border-radius: var(--fh-radius-sm); overflow: hidden; }
+.fh-chart-stack__seg { border-radius: 3px; min-width: 3px; }
+.fh-chart-stack__seg.fh-chart-nodata { flex: 0 0 12px; }
+.fh-chart-stack__value { flex: 0 0 auto; font-size: var(--fh-text-xs); color: var(--fh-color-text); white-space: nowrap; }
+
+/* FunnelBar (HTML) — rhymes visually with .fh-progress's sunken single-bar track */
+.fh-chart-funnel { display: flex; flex-direction: column; gap: var(--fh-space-2); }
+.fh-chart-funnel__row { display: flex; align-items: center; gap: var(--fh-space-3); }
+.fh-chart-funnel__label { flex: 0 0 9rem; font-size: var(--fh-text-sm); color: var(--fh-color-text-muted); text-align: right; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.fh-chart-funnel__track { flex: 1; background: var(--fh-color-surface-sunken); border-radius: var(--fh-radius-sm); overflow: hidden; position: relative; }
+.fh-chart-funnel__bar { display: block; height: 100%; background: var(--fh-color-primary); border-radius: inherit; }
+.fh-chart-funnel__bar--offramp { background: var(--fh-color-warning-soft); }
+.fh-chart-funnel__bar--nodata { position: absolute; inset: 2px; height: auto; }
+.fh-chart-funnel__value { flex: 0 0 auto; font-size: var(--fh-text-xs); color: var(--fh-color-text); white-space: nowrap; }
+.fh-chart-funnel__divider { font-size: var(--fh-text-xs); color: var(--fh-color-text-subtle); padding-top: var(--fh-space-2); border-top: 1px dashed var(--fh-color-border); }
+
+/* LineChart (SVG) */
+.fh-chart-line-path { fill: none; stroke-width: 2; }
+.fh-chart-line-axis-label { fill: var(--fh-color-text-muted); font-size: 10px; }
+.fh-chart-line-nodata-tick { stroke: var(--fh-color-scale-quality-none); stroke-width: 1.5; stroke-dasharray: 2 2; }
+
+/* Shared legend */
+.fh-chart-legend { display: flex; gap: var(--fh-space-4); flex-wrap: wrap; margin-bottom: var(--fh-space-2); font-size: var(--fh-text-xs); color: var(--fh-color-text-muted); }
+.fh-chart-legend__swatch { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 6px; vertical-align: -1px; }
+
+/* Floating cursor-tracking tooltip (ChartTooltip) — deliberately NOT .fh-tooltip__content (§16,
+   CSS-only): that class is position:absolute, anchored to a wrapping parent. This one is
+   position:fixed at cursor coordinates — same inverse-surface visual family, different,
+   uncoupled positioning mechanism, since it floats relative to the pointer, not one element. */
+.fh-chart-tooltip {
+  position: fixed; z-index: var(--fh-z-tooltip); max-width: 20rem;
+  padding: var(--fh-space-1) var(--fh-space-2); font-size: var(--fh-text-xs);
+  color: var(--fh-color-inverse-fg); background: var(--fh-color-inverse-surface);
+  border-radius: var(--fh-radius-sm); box-shadow: var(--fh-shadow-md); pointer-events: none;
+}
+
+/* DonutChart — CSS conic-gradient ring, no SVG. .fh-chart-nodata's dashed treatment applies
+   directly to the ring (a round dashed border reads immediately as "a ring with nothing in it"). */
+.fh-chart-donut { position: relative; margin: 0 auto; }
+.fh-chart-donut__ring { position: absolute; inset: 0; border-radius: 50%; }
+.fh-chart-donut__ring.fh-chart-nodata { border-radius: 50%; border-width: 2px; }
+.fh-chart-donut__hole {
+  position: absolute; border-radius: 50%; background: var(--fh-color-surface);
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+}
+.fh-chart-donut__center { font-size: var(--fh-text-xl); font-weight: var(--fh-weight-bold); color: var(--fh-color-text); font-variant-numeric: tabular-nums; }
+.fh-chart-donut__center-sub { font-size: var(--fh-text-xs); color: var(--fh-color-text-muted); }
+.fh-chart-legend--stacked { flex-direction: column; gap: var(--fh-space-1); margin-top: var(--fh-space-3); margin-bottom: 0; }
+
+/* StackedColumnChart — vertical stacked bars across a time axis, the column-chart counterpart of
+   §52's horizontal StackedBar. Shares .fh-chart-bars__labels (BarTrack's x-axis label row). */
+.fh-chart-columns { display: flex; gap: var(--fh-space-2); align-items: flex-end; }
+.fh-chart-columns__col { position: relative; flex: 1; min-width: 4px; height: 100%; }
+.fh-chart-columns__seg { position: absolute; left: 0; right: 0; }
+.fh-chart-columns__seg--top { border-radius: var(--fh-radius-sm) var(--fh-radius-sm) 0 0; }
+.fh-chart-columns__seg.fh-chart-nodata { border-radius: 2px; }
+/* The COLUMN_SUBLABEL_SPACE track allowance (react/charts.tsx) only makes room for this row —
+   it still has to be a real block to drop to its own line under .fh-chart-bars__label's text. */
+.fh-chart-columns__sublabel { display: block; font-size: var(--fh-text-xs); color: var(--fh-color-text-muted); }
+
+/* ============================ 53 INLINE LINK ============================ */
+/* A link inside running text or a table cell, where the surrounding text is already
+   coloured and an anchor's colour alone does not read as "clickable".
+
+   base.css styles the ELEMENT (`a { color: var(--fh-color-text-link); text-decoration: none }`),
+   which is right for nav rails, cards and buttons-shaped-as-links — most anchors in an ERP
+   should not be underlined. `.fh-link` is the opt-in for the case where they should: an
+   in-table link, or a link mid-sentence, needs the underline to be findable without hovering.
+
+   Why this is a component and not app CSS: four apps in the estate emit `.fh-link` against a
+   class that was never defined in any DS version, and a fifth (career-counselling) shipped
+   its own copy in app CSS after finding "every in-table link rendered identically to the text
+   beside it, with nothing to say it was clickable." That is a design-system gap by
+   definition, so the local copy is deleted in favour of this rule.
+
+   Hover thickens the underline rather than shifting colour: --fh-color-text-link and
+   --fh-color-primary-hover resolve to the same ramp step (blue-700 light / blue-300 dark), so
+   a colour-only hover is invisible — and an already-underlined link cannot use base.css's
+   `a:hover { text-decoration: underline }` affordance either. */
+.fh-link {
+  color: var(--fh-color-text-link);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.15em;
+  border-radius: var(--fh-radius-sm);
+}
+.fh-link:hover { text-decoration-thickness: 2px; }
+.fh-link:focus-visible { outline: none; box-shadow: var(--fh-ring); }
+
+/* ============================ 53 WORKBENCH (record work surface) ============================ */
+/* The record-with-a-lifecycle detail page as ONE work surface instead of a long card scroll:
+   a wide WORK column (tabbed panes) plus one 300-380px rail stacking the person/context cards
+   (side) over the record cards (feed). Three DOM zones, TWO columns — two-col is the DEFAULT
+   by ruling (VK, 30-Aug-2026, off recruitment's live page: three columns squeezed the centre);
+   `main` spans both grid rows so the zones stay separate for stacking. Below 1200px everything
+   stacks work-first, which is also the phone reading order.
+
+     <div class="fh-workbench">
+       <div class="fh-workbench__main">
+         <div class="fh-tabs" role="tablist"> <button class="fh-tab" role="tab" …> … </div>
+         <div class="fh-workbench__pane" role="tabpanel" hidden={…}> …cards… </div> ×N
+       </div>
+       <aside class="fh-workbench__side"> …who/what this record is about… </aside>
+       <aside class="fh-workbench__feed"> …what was said / what happened… </aside>
+     </div>
+
+   TWO RULES RIDE THE MARKUP. (1) Panes stay MOUNTED and hide via [hidden] — never unmount:
+   in-flight form state survives a tab flick, and print.css forces every pane visible, because
+   a printed record missing its unselected tabs is a lie on paper. (2) The default tab is
+   wherever the action is, not a fixed first tab. Doctrine: INTEGRATION.md §7e. */
+.fh-workbench {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-areas: 'main' 'side' 'feed';
+  gap: var(--fh-stack-gap);
+  align-items: start;
+}
+@media (min-width: 1200px) {
+  .fh-workbench {
+    grid-template-columns: minmax(0, 1fr) minmax(300px, 380px);
+    grid-template-areas:
+      'main side'
+      'main feed';
+    grid-template-rows: auto 1fr;
+  }
+}
+.fh-workbench__main { grid-area: main; min-width: 0; display: flex; flex-direction: column; gap: var(--fh-stack-gap); }
+.fh-workbench__side { grid-area: side; min-width: 0; display: flex; flex-direction: column; gap: var(--fh-stack-gap); }
+.fh-workbench__feed { grid-area: feed; min-width: 0; display: flex; flex-direction: column; gap: var(--fh-stack-gap); }
+.fh-workbench__pane { display: flex; flex-direction: column; gap: var(--fh-stack-gap); }
+.fh-workbench__pane[hidden] { display: none; }
+
+/* ============================ 54 SPLIT (queue + reading pane) ============================ */
+/* Triage: the queue on the left, ONE item read in full on the right — for inboxes, call lists,
+   review queues, anywhere the decision is "read this, then act". SELECTION IS A URL, never
+   client state (?for=<id> or equivalent): a triage position stays shareable and reload-safe,
+   GET-driven search composes with it, and no client action ships names into a payload. Rows
+   are anchors; mark the open one with .is-selected + aria-current. Below 1024px the panes
+   stack, queue first. Born as recruitment's message triage (30-Aug-2026). */
+.fh-split {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--fh-stack-gap);
+  align-items: start;
+}
+@media (min-width: 1024px) {
+  .fh-split { grid-template-columns: minmax(260px, 340px) minmax(0, 1fr); }
+}
+.fh-split__queue { min-width: 0; }
+.fh-split__detail { min-width: 0; }
+.fh-split__row {
+  display: block;
+  padding: var(--fh-space-3) var(--fh-space-4);
+  border-top: var(--fh-border-width) solid var(--fh-color-border);
+  color: inherit;
+  text-decoration: none;
+}
+.fh-split__row:first-child { border-top: 0; }
+.fh-split__row:hover { background: var(--fh-color-surface-sunken); text-decoration: none; }
+.fh-split__row.is-selected {
+  background: var(--fh-color-primary-subtle);
+  box-shadow: inset 3px 0 0 var(--fh-color-primary);
+}
+.fh-split__row:focus-visible { outline: none; box-shadow: var(--fh-ring); }
+
+/* ==========================================================================
+   PRODUCT / ERP PROFILE — "Beacon" identity   (opt-in: data-profile="product")
+   --------------------------------------------------------------------------
+   Scoped entirely under [data-profile="product"], so marketing/brand surfaces
+   keep the default look untouched. Built on existing brand tokens — no anchor
+   changes. Everything stays token-driven, so dark theme composes automatically.
+   The brand is tuned for impact; this is its confident operational counterpart.
+   ========================================================================== */
+
+/* Brandmark swap helper — colour logo on light chrome, white logo on dark chrome.
+   Put both <img>s in the sidebar brand; the profile shows the right one. */
+.fh-logo--on-dark { display: none; }
+
+/* --- Sidebar: deep brand-blue rail, white content, yellow active spark ------ */
+[data-profile="product"] .fh-sidebar {
+  background: linear-gradient(180deg, #00284D, #001426);   /* deeper near-black navy rail */
+  border-right: none;
+  box-shadow: 2px 0 12px rgba(0, 39, 71, 0.18);
+}
+[data-profile="product"] .fh-sidebar .fh-logo--on-light { display: none; }
+[data-profile="product"] .fh-sidebar .fh-logo--on-dark  { display: block; }
+[data-profile="product"] .fh-sidebar__brand { color: #fff; }
+[data-profile="product"] .fh-sidebar__section { color: rgba(255, 255, 255, 0.55); }
+[data-profile="product"] .fh-sidebar__item { color: rgba(255, 255, 255, 0.85); }
+[data-profile="product"] .fh-sidebar__item:hover { background: rgba(255, 255, 255, 0.12); color: #fff; }
+[data-profile="product"] .fh-sidebar__item.is-active {
+  background: rgba(255, 255, 255, 0.16);
+  color: #fff;
+  border-left: 3px solid var(--fh-yellow-400);   /* the yellow "spark" accent */
+  padding-left: calc(var(--fh-space-3) - 3px);
+}
+/* Trailing count badges stay legible on the dark rail */
+[data-profile="product"] .fh-sidebar__item .fh-badge--warning { background: var(--fh-yellow-400); color: var(--fh-neutral-900); }
+[data-profile="product"] .fh-sidebar__item .fh-badge--danger  { background: #fff; color: var(--fh-red-700); }
+
+/* --- KPI stats: top accent bar + bold ink value. The bar colour is driven by
+   the existing .fh-stat--* modifier (default brand blue); the value stays ink
+   so a yellow/red bar never produces an ugly coloured number. ---------------- */
+[data-profile="product"] .fh-stat {
+  position: relative;
+  overflow: hidden;
+  transition: transform var(--fh-duration-base) var(--fh-ease-standard),
+              box-shadow var(--fh-duration-base) var(--fh-ease-standard);
+}
+[data-profile="product"] .fh-stat::before {
+  content: "";
+  position: absolute; inset: 0 auto 0 0; width: 4px;   /* left accent bar (colour via .fh-stat--*) */
+  background: var(--fh-color-primary);
+}
+[data-profile="product"] .fh-stat--success::before { background: var(--fh-color-success); }
+[data-profile="product"] .fh-stat--warning::before { background: var(--fh-color-warning); }
+[data-profile="product"] .fh-stat--danger::before  { background: var(--fh-color-danger); }
+[data-profile="product"] .fh-stat:hover { transform: translateY(-2px); box-shadow: var(--fh-shadow-md); }
+[data-profile="product"] .fh-stat__label {
+  text-transform: uppercase;
+  letter-spacing: var(--fh-tracking-wide);
+  font-weight: var(--fh-weight-semibold);   /* 600 — softer type pick */
+  font-size: var(--fh-text-xs);
+  color: var(--fh-color-text-muted);
+}
+[data-profile="product"] .fh-stat__value {
+  font-size: var(--fh-text-3xl);            /* keeps multi-token values one-line */
+  font-weight: var(--fh-weight-bold);       /* 700 — eased from 800 to match softer headings */
+  letter-spacing: -0.02em;                  /* tighten Jakarta numerals */
+  color: var(--fh-color-text);              /* ink, overrides the --* value tone */
+}
+
+/* --- Cards: extrabold title with a brand tick + gentle hover lift ----------- */
+[data-profile="product"] .fh-card { transition: box-shadow var(--fh-duration-base) var(--fh-ease-standard); }
+[data-profile="product"] .fh-card:hover { box-shadow: var(--fh-shadow-md); }
+[data-profile="product"] .fh-card__title {
+  position: relative;
+  padding-left: var(--fh-space-3);
+  font-weight: var(--fh-weight-semibold);   /* 600 — softer type pick, balanced with the tick */
+}
+[data-profile="product"] .fh-card__title::before {
+  content: "";
+  position: absolute; left: 0; top: 0.15em; bottom: 0.15em;
+  width: 4px; border-radius: 2px;
+  background: var(--fh-color-primary);
+}
+
+/* --- Table: brand-tinted header ---------------------------------------------- */
+[data-profile="product"] .fh-table thead th {
+  background: var(--fh-color-primary-subtle);
+  color: var(--fh-color-primary-text);
+}
+
+/* --- Controls: confident buttons, solid brand avatar, thicker progress ------- */
+[data-profile="product"] .fh-btn { font-weight: var(--fh-weight-bold); }
+[data-profile="product"] .fh-btn--primary { box-shadow: 0 1px 2px rgba(0, 39, 71, 0.18); }
+[data-profile="product"] .fh-avatar { background: var(--fh-color-primary); color: var(--fh-color-primary-fg); }
+[data-profile="product"] .fh-progress { height: 10px; }
+
+/* --- Polish: softer (semibold) Jakarta heading rhythm, sidebar structure, focus */
+[data-profile="product"] :is(h1, h2, h3, h4, h5, h6, .fh-h1, .fh-h2, .fh-h3, .fh-h4, .fh-h5, .fh-h6) {
+  font-weight: var(--fh-weight-semibold);   /* calmer 600 headings (the "Softer" type pick) */
+  letter-spacing: -0.02em;
+}
+/* Subtle divider separating the brand lockup from the nav list */
+[data-profile="product"] .fh-sidebar__brand {
+  padding-bottom: var(--fh-space-3);
+  margin-bottom: var(--fh-space-2);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+}
+/* Keyboard focus stays visible on the dark sidebar (the blue ring would vanish) */
+[data-profile="product"] .fh-sidebar__item:focus-visible { outline: 2px solid var(--fh-yellow-400); outline-offset: -2px; }
+
+/* --- Compact × product: dense operational screens keep the Beacon identity but
+   tighten what the profile sized absolutely (density tokens cover the rest). ---- */
+[data-density="compact"][data-profile="product"] .fh-stat__value { font-size: var(--fh-text-2xl); }
+[data-density="compact"][data-profile="product"] .fh-stat::before { width: 3px; }
+[data-density="compact"][data-profile="product"] .fh-card__title { font-size: var(--fh-text-base); }
+[data-density="compact"][data-profile="product"] .fh-sidebar__item { padding-top: 6px; padding-bottom: 6px; }
+[data-density="compact"][data-profile="product"] .fh-progress { height: 8px; }
+[data-density="compact"][data-profile="product"] .fh-stepper__dot { width: 1.6rem; height: 1.6rem; }
+[data-density="compact"][data-profile="product"] .fh-stepper__step::before { top: 0.8rem; left: calc(-50% + 1rem); right: calc(50% + 1rem); }
+/* The claim node shrinks with the dots it rides between ((1.6 − 1.1) / 2 recentres it). */
+[data-density="compact"][data-profile="product"] .fh-stepper__step--claim .fh-stepper__dot { width: 1.1rem; height: 1.1rem; margin-top: 0.25rem; }

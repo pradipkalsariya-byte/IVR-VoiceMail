@@ -1,0 +1,558 @@
+/* ==========================================================================
+   Fountainhead Design System — Design Tokens
+   --------------------------------------------------------------------------
+   The single source of truth for colour, type, space, radius, elevation,
+   motion and z-index. Two tiers:
+
+     1. PRIMITIVES  (--fh-blue-600, --fh-space-4 ...)  raw, theme-agnostic
+     2. SEMANTIC    (--fh-color-primary, --fh-color-bg ...)  purpose-based
+
+   Components only ever read SEMANTIC tokens, so a theme can be re-skinned by
+   re-mapping the semantic layer alone. Themes:
+     [data-theme="light"]  (default, also bare :root)
+     [data-theme="dark"]
+     [data-density="compact"]  (ERP / data-dense; composes with either theme)
+
+   Brand anchors (exact, from Brand Guidelines 2025):
+     Blue   #005BAA   Red #B8292F   Yellow #F2C418
+   ========================================================================== */
+
+:root {
+  /* ----------------------------------------------------------------------
+     1. PRIMITIVE — COLOUR RAMPS
+     Brand hues anchored on the exact guideline values; ramps generated as
+     smooth tints/shades. Neutral is a cool grey tuned to the brand blue.
+     ---------------------------------------------------------------------- */
+
+  /* Blue — primary / brand "guide" colour (anchor 600 = #005BAA) */
+  --fh-blue-50:  #E6EFF6;
+  --fh-blue-100: #CCDEEE;
+  --fh-blue-200: #A8C7E2;
+  --fh-blue-300: #80ADD4;
+  --fh-blue-400: #5793C7;
+  --fh-blue-500: #2E79B9;
+  --fh-blue-600: #005BAA; /* BRAND */
+  --fh-blue-700: #004C8F;
+  --fh-blue-800: #003E74;
+  --fh-blue-900: #002747;
+
+  /* Red — secondary / brand "child" colour (anchor 600 = #B8292F) */
+  --fh-red-50:  #F8EAEA;
+  --fh-red-100: #F1D4D5;
+  --fh-red-200: #E7B6B8;
+  --fh-red-300: #DC9497;
+  --fh-red-400: #D07276;
+  --fh-red-500: #C55054;
+  --fh-red-600: #B8292F; /* BRAND */
+  --fh-red-700: #9E2227;
+  --fh-red-800: #7D1B1F;
+  --fh-red-900: #5C1417;
+
+  /* Yellow — accent / "spark of curiosity" (anchor 400 = #F2C418) */
+  --fh-yellow-50:  #FBEBB0;
+  --fh-yellow-100: #F8E28C;
+  --fh-yellow-200: #F6D867;
+  --fh-yellow-300: #F4CF42;
+  --fh-yellow-400: #F2C418; /* BRAND */
+  --fh-yellow-500: #DAB015;
+  --fh-yellow-600: #C29C13;
+  --fh-yellow-700: #AA8810;
+  --fh-yellow-800: #95760E;
+  --fh-yellow-900: #83680C;
+
+  /* Green — derived success hue (not in the brand palette; tuned to harmonise).
+     Use ONLY for success/positive system states, never as a brand colour. */
+  --fh-green-50:  #E9F3ED;
+  --fh-green-100: #D2E8DB;
+  --fh-green-200: #B3D7C2;
+  --fh-green-300: #8FC4A6;
+  --fh-green-400: #6BB289;
+  --fh-green-500: #479F6C;
+  --fh-green-600: #1F8A4C;
+  --fh-green-700: #1B7C44;
+  --fh-green-800: #186E3D;
+  --fh-green-900: #146035;
+
+  /* Neutral — cool grey */
+  --fh-neutral-0:   #FFFFFF;
+  --fh-neutral-50:  #F6F7F9;
+  --fh-neutral-100: #ECEEF1;
+  --fh-neutral-200: #DCE0E5;
+  --fh-neutral-300: #C5CBD3;
+  --fh-neutral-400: #9BA4AF;
+  --fh-neutral-500: #6E7884;
+  --fh-neutral-600: #545C68;
+  --fh-neutral-700: #3E454E;
+  --fh-neutral-800: #2A2F37;
+  --fh-neutral-900: #181C22;
+  --fh-neutral-950: #0F1216;
+
+  /* ----------------------------------------------------------------------
+     1b. PRIMITIVE — TYPOGRAPHY
+     ---------------------------------------------------------------------- */
+  --fh-font-heading: "Montserrat", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --fh-font-body:    "Nunito", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  /* High-legibility UI face for dense product/ERP surfaces (the product profile
+     swaps body text to this). "Inter" is optional — falls back to the OS UI font. */
+  --fh-font-ui:      "Inter", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --fh-font-mono:    ui-monospace, "SF Mono", "Cascadia Mono", "Roboto Mono", Menlo, Consolas, monospace;
+
+  --fh-weight-regular:   400;
+  --fh-weight-medium:    500;
+  --fh-weight-semibold:  600;
+  --fh-weight-bold:      700;
+  --fh-weight-extrabold: 800;
+
+  /* Type scale (16px root). Brand anchors present: 14px body, 21px subhead,
+     42px heading. */
+  --fh-text-xs:   0.75rem;    /* 12 */
+  --fh-text-sm:   0.875rem;   /* 14  — brand body */
+  --fh-text-base: 1rem;       /* 16 */
+  --fh-text-lg:   1.125rem;   /* 18 */
+  --fh-text-xl:   1.3125rem;  /* 21  — brand subhead */
+  --fh-text-2xl:  1.5rem;     /* 24 */
+  --fh-text-3xl:  1.875rem;   /* 30 */
+  --fh-text-4xl:  2.25rem;    /* 36 */
+  --fh-text-5xl:  2.625rem;   /* 42  — brand heading */
+  --fh-text-6xl:  3.375rem;   /* 54 */
+
+  --fh-leading-none:    1;
+  --fh-leading-tight:   1.15;
+  --fh-leading-snug:    1.3;
+  --fh-leading-normal:  1.5;
+  --fh-leading-relaxed: 1.65;
+
+  --fh-tracking-tight:  -0.01em;
+  --fh-tracking-normal: 0;
+  --fh-tracking-wide:   0.04em;  /* Montserrat Medium all-caps subheads */
+  --fh-tracking-wider:  0.08em;
+
+  /* ----------------------------------------------------------------------
+     1c. PRIMITIVE — SPACE (4px grid), RADIUS, ELEVATION, MOTION, Z, SIZES
+     ---------------------------------------------------------------------- */
+  --fh-space-0:  0;
+  --fh-space-px: 1px;
+  --fh-space-1:  0.25rem;  /* 4  */
+  --fh-space-2:  0.5rem;   /* 8  */
+  --fh-space-3:  0.75rem;  /* 12 */
+  --fh-space-4:  1rem;     /* 16 */
+  --fh-space-5:  1.25rem;  /* 20 */
+  --fh-space-6:  1.5rem;   /* 24 */
+  --fh-space-7:  1.75rem;  /* 28 */
+  --fh-space-8:  2rem;     /* 32 */
+  --fh-space-10: 2.5rem;   /* 40 */
+  --fh-space-12: 3rem;     /* 48 */
+  --fh-space-16: 4rem;     /* 64 */
+  --fh-space-20: 5rem;     /* 80 */
+  --fh-space-24: 6rem;     /* 96 */
+
+  /* Reading measure — running prose never spans a full app region. .fh-prose caps at
+     the comfortable measure; the narrow step is for captions/asides. (density kit) */
+  --fh-measure:        65ch;
+  --fh-measure-narrow: 45ch;
+
+  --fh-radius-xs:   4px;
+  --fh-radius-sm:   6px;
+  --fh-radius-md:   8px;
+  --fh-radius-lg:   12px;
+  --fh-radius-xl:   16px;
+  --fh-radius-2xl:  24px;
+  --fh-radius-full: 9999px;
+
+  --fh-border-width:   1px;
+  --fh-border-width-2: 2px;
+
+  /* Elevation — cool, layered shadows */
+  --fh-shadow-xs: 0 1px 2px rgba(16, 24, 40, 0.06);
+  --fh-shadow-sm: 0 1px 2px rgba(16, 24, 40, 0.06), 0 1px 3px rgba(16, 24, 40, 0.10);
+  --fh-shadow-md: 0 2px 4px -1px rgba(16, 24, 40, 0.06), 0 4px 8px -1px rgba(16, 24, 40, 0.10);
+  --fh-shadow-lg: 0 4px 6px -2px rgba(16, 24, 40, 0.05), 0 12px 16px -4px rgba(16, 24, 40, 0.10);
+  --fh-shadow-xl: 0 8px 8px -4px rgba(16, 24, 40, 0.04), 0 20px 24px -4px rgba(16, 24, 40, 0.12);
+
+  /* Motion */
+  --fh-duration-fast: 120ms;
+  --fh-duration-base: 200ms;
+  --fh-duration-slow: 320ms;
+  --fh-ease-standard:   cubic-bezier(0.2, 0, 0, 1);
+  --fh-ease-emphasized: cubic-bezier(0.3, 0, 0, 1);
+
+  /* Z-index scale */
+  --fh-z-base:     0;
+  --fh-z-docked:   100;
+  --fh-z-dropdown: 1000;
+  --fh-z-sticky:   1100;
+  --fh-z-overlay:  1200;
+  --fh-z-modal:    1300;
+  --fh-z-popover:  1400;
+  --fh-z-toast:    1500;
+  --fh-z-tooltip:  1600;
+
+  /* Layout reference (also exported in SCSS for media queries) */
+  --fh-container-max: 1200px;
+  --fh-bp-sm: 640px;
+  --fh-bp-md: 768px;
+  --fh-bp-lg: 1024px;
+  --fh-bp-xl: 1280px;
+
+  /* ----------------------------------------------------------------------
+     2. SEMANTIC TOKENS — LIGHT THEME (default)
+     ---------------------------------------------------------------------- */
+
+  /* Surfaces & lines */
+  --fh-color-bg:             var(--fh-neutral-50);
+  --fh-color-surface:        var(--fh-neutral-0);
+  --fh-color-surface-raised: var(--fh-neutral-0);
+  --fh-color-surface-sunken: var(--fh-neutral-100);
+  --fh-color-border:         var(--fh-neutral-200);
+  --fh-color-border-strong:  var(--fh-neutral-300);
+  --fh-color-overlay:        rgba(16, 24, 40, 0.55);
+  /* Inverse surface — high-contrast chip flipped against the theme (tooltips etc.) */
+  --fh-color-inverse-surface: var(--fh-neutral-900);
+  --fh-color-inverse-fg:      var(--fh-neutral-50);
+
+  /* Text */
+  --fh-color-text:         var(--fh-neutral-900);
+  --fh-color-text-muted:   var(--fh-neutral-600);
+  --fh-color-text-subtle:  var(--fh-neutral-500);
+  --fh-color-text-inverse: var(--fh-neutral-0);
+  --fh-color-text-link:    var(--fh-blue-700);
+
+  /* Primary (brand blue) */
+  --fh-color-primary:         var(--fh-blue-600);
+  --fh-color-primary-hover:   var(--fh-blue-700);
+  --fh-color-primary-active:  var(--fh-blue-800);
+  --fh-color-primary-fg:      var(--fh-neutral-0);
+  --fh-color-primary-subtle:  var(--fh-blue-50);
+  --fh-color-primary-subtle-fg: var(--fh-blue-800);
+  --fh-color-primary-border:  var(--fh-blue-200);
+  --fh-color-primary-text:    var(--fh-blue-700);
+
+  /* Secondary (brand red) */
+  --fh-color-secondary:        var(--fh-red-600);
+  --fh-color-secondary-hover:  var(--fh-red-700);
+  --fh-color-secondary-active: var(--fh-red-800);
+  --fh-color-secondary-fg:     var(--fh-neutral-0);
+  --fh-color-secondary-subtle: var(--fh-red-50);
+  --fh-color-secondary-subtle-fg: var(--fh-red-800);
+  --fh-color-secondary-border: var(--fh-red-200);
+  --fh-color-secondary-text:   var(--fh-red-700);
+
+  /* Accent (brand yellow — dark text on yellow) */
+  --fh-color-accent:        var(--fh-yellow-400);
+  --fh-color-accent-hover:  var(--fh-yellow-500);
+  --fh-color-accent-active: var(--fh-yellow-600);
+  --fh-color-accent-fg:     var(--fh-neutral-900);
+  --fh-color-accent-subtle: var(--fh-yellow-50);
+  --fh-color-accent-subtle-fg: var(--fh-yellow-900);
+  --fh-color-accent-border: var(--fh-yellow-300);
+  --fh-color-accent-text:   var(--fh-yellow-900);
+
+  /* State — success */
+  --fh-color-success:        var(--fh-green-700);
+  --fh-color-success-hover:  var(--fh-green-800);
+  --fh-color-success-fg:     var(--fh-neutral-0);
+  --fh-color-success-subtle: var(--fh-green-50);
+  --fh-color-success-subtle-fg: var(--fh-green-900);
+  --fh-color-success-border: var(--fh-green-200);
+  --fh-color-success-text:   var(--fh-green-800);
+
+  /* State — warning (brand yellow family, dark text) */
+  --fh-color-warning:        var(--fh-yellow-400);
+  --fh-color-warning-hover:  var(--fh-yellow-500);
+  --fh-color-warning-fg:     var(--fh-neutral-900);
+  --fh-color-warning-subtle: var(--fh-yellow-50);
+  --fh-color-warning-subtle-fg: var(--fh-yellow-900);
+  --fh-color-warning-border: var(--fh-yellow-300);
+  --fh-color-warning-text:   var(--fh-yellow-900);
+
+  /* State — danger (brand red family) */
+  --fh-color-danger:        var(--fh-red-600);
+  --fh-color-danger-hover:  var(--fh-red-700);
+  --fh-color-danger-active: var(--fh-red-800);
+  --fh-color-danger-fg:     var(--fh-neutral-0);
+  --fh-color-danger-subtle: var(--fh-red-50);
+  --fh-color-danger-subtle-fg: var(--fh-red-800);
+  --fh-color-danger-border: var(--fh-red-200);
+  --fh-color-danger-text:   var(--fh-red-700);
+
+  /* State — info (brand blue family) */
+  --fh-color-info:        var(--fh-blue-600);
+  --fh-color-info-fg:     var(--fh-neutral-0);
+  --fh-color-info-subtle: var(--fh-blue-50);
+  --fh-color-info-subtle-fg: var(--fh-blue-800);
+  --fh-color-info-border: var(--fh-blue-200);
+  --fh-color-info-text:   var(--fh-blue-700);
+
+  /* Data-viz fills — softer, less-saturated state colours for LARGE areas
+     (donut/bar segments, heatmap cells), so a chart full of "overdue" reads as
+     information, not alarm. Keep the saturated --fh-color-danger/etc. for small
+     accents, controls, and text. */
+  --fh-color-danger-soft:  var(--fh-red-500);
+  --fh-color-warning-soft: var(--fh-yellow-300);
+  --fh-color-success-soft: var(--fh-green-500);
+
+  /* Data-viz — chart chrome (neutral, never a data series) */
+  --fh-color-chart-reference: var(--fh-neutral-500);  /* benchmark / target / world-avg lines & markers */
+  --fh-color-chart-grid:      var(--fh-neutral-200);  /* gridlines / axis rules (recede behind the data) */
+
+  /* Data-viz — diverging scale for SIGNED deltas (variance, over/under, budget).
+     Soft mid-steps (neg/pos) for large fills so the chart reads as information;
+     *-strong for encoding magnitude; neutral grey for the zero point. The scale
+     itself is valence-neutral — assign good/bad meaning at the app layer. */
+  --fh-color-diverging-neg-strong: var(--fh-red-600);
+  --fh-color-diverging-neg:        var(--fh-red-500);
+  --fh-color-diverging-neutral:    var(--fh-neutral-300);
+  --fh-color-diverging-pos:        var(--fh-green-500);
+  --fh-color-diverging-pos-strong: var(--fh-green-600);
+
+  /* Data-viz — ordinal "quality" scale for N ordered categories that must stay
+     distinguishable stacked together (grade-mix bars, band/tier breakdowns).
+     Multi-hue on purpose (green → yellow → red): a single-hue ramp reads fine
+     for one swatch but collapses adjacent steps into the same colour once
+     they're side by side in a stack — that's the bug this scale exists to fix.
+     RULE: color alone must never carry ordinal meaning — when it does, reach
+     for this scale, not a hue ramp. Exception: the 1-7 IB grade chips
+     (.fh-grade--1…7) are exempt because the digit itself carries the signal;
+     color there is redundant encoding, not the only one. */
+  --fh-color-scale-quality-1: var(--fh-green-700); /* best */
+  --fh-color-scale-quality-2: var(--fh-green-400);
+  --fh-color-scale-quality-3: var(--fh-yellow-400);
+  --fh-color-scale-quality-4: var(--fh-red-300);
+  --fh-color-scale-quality-5: var(--fh-red-500);
+  --fh-color-scale-quality-6: var(--fh-red-800); /* worst */
+  --fh-color-scale-quality-none: var(--fh-neutral-300); /* no result / N/A — outside the ramp */
+
+  /* Form controls */
+  --fh-color-field-bg:          var(--fh-neutral-0);
+  --fh-color-field-border:      var(--fh-neutral-300);
+  --fh-color-field-placeholder: var(--fh-neutral-400);
+  --fh-color-field-disabled-bg: var(--fh-neutral-100);
+
+  /* Focus ring */
+  --fh-color-focus:      var(--fh-blue-600);
+  --fh-ring:             0 0 0 3px rgba(0, 91, 170, 0.35);
+  --fh-ring-danger:      0 0 0 3px rgba(184, 41, 47, 0.35);
+
+  /* ----------------------------------------------------------------------
+     2b. SEMANTIC — CONTROL SIZING (re-mapped by density)
+     Comfortable defaults. Components size themselves from these.
+     ---------------------------------------------------------------------- */
+  --fh-control-height:     2.5rem;   /* 40 */
+  --fh-control-height-sm:  2rem;     /* 32 */
+  --fh-control-height-lg:  3rem;     /* 48 */
+  --fh-control-pad-x:      var(--fh-space-4);
+  --fh-control-pad-x-sm:   var(--fh-space-3);
+  --fh-control-font:       var(--fh-text-sm);
+  --fh-control-radius:     var(--fh-radius-md);
+
+  --fh-table-cell-pad-y:   var(--fh-space-3);
+  --fh-table-cell-pad-x:   var(--fh-space-4);
+  --fh-card-pad:           var(--fh-space-6);
+  --fh-stack-gap:          var(--fh-space-4);
+}
+
+/* ==========================================================================
+   DARK THEME — re-maps only the semantic layer
+   ========================================================================== */
+[data-theme="dark"] {
+  --fh-color-bg:             var(--fh-neutral-950);
+  --fh-color-surface:        var(--fh-neutral-900);
+  --fh-color-surface-raised: var(--fh-neutral-800);
+  --fh-color-surface-sunken: #0B0E12;
+  --fh-color-border:         var(--fh-neutral-700);
+  --fh-color-border-strong:  var(--fh-neutral-600);
+  --fh-color-overlay:        rgba(0, 0, 0, 0.65);
+  --fh-color-inverse-surface: var(--fh-neutral-100);
+  --fh-color-inverse-fg:      var(--fh-neutral-900);
+
+  --fh-color-text:         var(--fh-neutral-50);
+  --fh-color-text-muted:   var(--fh-neutral-300);
+  --fh-color-text-subtle:  var(--fh-neutral-400);
+  --fh-color-text-inverse: var(--fh-neutral-900);
+  --fh-color-text-link:    var(--fh-blue-300);
+
+  /* Primary — brighten for legibility on dark; solid fill keeps white text */
+  --fh-color-primary:         var(--fh-blue-500);
+  --fh-color-primary-hover:   var(--fh-blue-400);
+  --fh-color-primary-active:  var(--fh-blue-300);
+  --fh-color-primary-fg:      var(--fh-neutral-0);
+  --fh-color-primary-subtle:  #0C2C49;
+  --fh-color-primary-subtle-fg: var(--fh-blue-100);
+  --fh-color-primary-border:  #14456F;
+  --fh-color-primary-text:    var(--fh-blue-300);
+
+  --fh-color-secondary:        var(--fh-red-500);
+  --fh-color-secondary-hover:  var(--fh-red-400);
+  --fh-color-secondary-active: var(--fh-red-300);
+  --fh-color-secondary-fg:     var(--fh-neutral-0);
+  --fh-color-secondary-subtle: #3A1416;
+  --fh-color-secondary-subtle-fg: var(--fh-red-100);
+  --fh-color-secondary-border: #5C1E22;
+  --fh-color-secondary-text:   var(--fh-red-300);
+
+  --fh-color-accent:        var(--fh-yellow-400);
+  --fh-color-accent-hover:  var(--fh-yellow-300);
+  --fh-color-accent-active: var(--fh-yellow-200);
+  --fh-color-accent-fg:     var(--fh-neutral-900);
+  --fh-color-accent-subtle: #2E2606;
+  --fh-color-accent-subtle-fg: var(--fh-yellow-200);
+  --fh-color-accent-border: #5C4708;
+  --fh-color-accent-text:   var(--fh-yellow-300);
+
+  --fh-color-success:        var(--fh-green-600);
+  --fh-color-success-hover:  var(--fh-green-500);
+  --fh-color-success-fg:     var(--fh-neutral-0);
+  --fh-color-success-subtle: #0E3522;
+  --fh-color-success-subtle-fg: var(--fh-green-200);
+  --fh-color-success-border: #1B5235;
+  --fh-color-success-text:   var(--fh-green-300);
+
+  --fh-color-warning:        var(--fh-yellow-400);
+  --fh-color-warning-hover:  var(--fh-yellow-300);
+  --fh-color-warning-fg:     var(--fh-neutral-900);
+  --fh-color-warning-subtle: #2E2606;
+  --fh-color-warning-subtle-fg: var(--fh-yellow-200);
+  --fh-color-warning-border: #5C4708;
+  --fh-color-warning-text:   var(--fh-yellow-300);
+
+  --fh-color-danger:        var(--fh-red-500);
+  --fh-color-danger-hover:  var(--fh-red-400);
+  --fh-color-danger-active: var(--fh-red-300);
+  --fh-color-danger-fg:     var(--fh-neutral-0);
+  --fh-color-danger-subtle: #3A1416;
+  --fh-color-danger-subtle-fg: var(--fh-red-100);
+  --fh-color-danger-border: #5C1E22;
+  --fh-color-danger-text:   var(--fh-red-300);
+
+  --fh-color-info:        var(--fh-blue-500);
+  --fh-color-info-fg:     var(--fh-neutral-0);
+  --fh-color-info-subtle: #0C2C49;
+  --fh-color-info-subtle-fg: var(--fh-blue-100);
+  --fh-color-info-border: #14456F;
+  --fh-color-info-text:   var(--fh-blue-300);
+
+  --fh-color-danger-soft:  var(--fh-red-400);
+  --fh-color-warning-soft: var(--fh-yellow-400);
+  --fh-color-success-soft: var(--fh-green-500);
+
+  --fh-color-chart-reference: var(--fh-neutral-400);
+  --fh-color-chart-grid:      var(--fh-neutral-700);
+  --fh-color-diverging-neg-strong: var(--fh-red-500);
+  --fh-color-diverging-neg:        var(--fh-red-400);
+  --fh-color-diverging-neutral:    var(--fh-neutral-600);
+  --fh-color-diverging-pos:        var(--fh-green-500);
+  --fh-color-diverging-pos-strong: var(--fh-green-400);
+
+  --fh-color-scale-quality-1: var(--fh-green-500);
+  --fh-color-scale-quality-2: var(--fh-green-300);
+  --fh-color-scale-quality-3: var(--fh-yellow-400);
+  --fh-color-scale-quality-4: var(--fh-red-300);
+  --fh-color-scale-quality-5: var(--fh-red-400);
+  --fh-color-scale-quality-6: var(--fh-red-600);
+  --fh-color-scale-quality-none: var(--fh-neutral-600);
+
+  --fh-color-field-bg:          var(--fh-neutral-900);
+  --fh-color-field-border:      var(--fh-neutral-600);
+  --fh-color-field-placeholder: var(--fh-neutral-500);
+  --fh-color-field-disabled-bg: var(--fh-neutral-800);
+
+  --fh-color-focus: var(--fh-blue-400);
+  --fh-ring:        0 0 0 3px rgba(87, 147, 199, 0.45);
+  --fh-ring-danger: 0 0 0 3px rgba(208, 114, 118, 0.45);
+
+  --fh-shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.40);
+  --fh-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.40), 0 1px 3px rgba(0, 0, 0, 0.50);
+  --fh-shadow-md: 0 2px 4px -1px rgba(0, 0, 0, 0.45), 0 4px 8px -1px rgba(0, 0, 0, 0.55);
+  --fh-shadow-lg: 0 4px 6px -2px rgba(0, 0, 0, 0.45), 0 12px 16px -4px rgba(0, 0, 0, 0.55);
+  --fh-shadow-xl: 0 8px 8px -4px rgba(0, 0, 0, 0.45), 0 20px 24px -4px rgba(0, 0, 0, 0.60);
+}
+
+/* Auto dark mode — opt in by adding data-theme="auto" to <html>.
+   Honours the OS preference without JavaScript. */
+@media (prefers-color-scheme: dark) {
+  [data-theme="auto"] {
+    color-scheme: dark;
+    /* mirror of the dark block above */
+    --fh-color-bg: var(--fh-neutral-950);
+    --fh-color-surface: var(--fh-neutral-900);
+    --fh-color-surface-raised: var(--fh-neutral-800);
+    --fh-color-surface-sunken: #0B0E12;
+    --fh-color-border: var(--fh-neutral-700);
+    --fh-color-border-strong: var(--fh-neutral-600);
+    --fh-color-overlay: rgba(0, 0, 0, 0.65);
+    --fh-color-inverse-surface: var(--fh-neutral-100);
+    --fh-color-inverse-fg: var(--fh-neutral-900);
+    --fh-color-text: var(--fh-neutral-50);
+    --fh-color-text-muted: var(--fh-neutral-300);
+    --fh-color-text-subtle: var(--fh-neutral-400);
+    --fh-color-text-inverse: var(--fh-neutral-900);
+    --fh-color-text-link: var(--fh-blue-300);
+    --fh-color-primary: var(--fh-blue-500);
+    --fh-color-primary-hover: var(--fh-blue-400);
+    --fh-color-primary-active: var(--fh-blue-300);
+    --fh-color-primary-subtle: #0C2C49;
+    --fh-color-primary-subtle-fg: var(--fh-blue-100);
+    --fh-color-primary-border: #14456F;
+    --fh-color-primary-text: var(--fh-blue-300);
+    --fh-color-danger: var(--fh-red-500);
+    --fh-color-danger-text: var(--fh-red-300);
+    --fh-color-success: var(--fh-green-600);
+    --fh-color-success-text: var(--fh-green-300);
+    --fh-color-field-bg: var(--fh-neutral-900);
+    --fh-color-field-border: var(--fh-neutral-600);
+    --fh-color-field-placeholder: var(--fh-neutral-500);
+    --fh-color-field-disabled-bg: var(--fh-neutral-800);
+    --fh-color-focus: var(--fh-blue-400);
+    --fh-ring: 0 0 0 3px rgba(87, 147, 199, 0.45);
+  }
+}
+
+/* ==========================================================================
+   COMPACT DENSITY — ERP / data-dense screens. Composes with light or dark.
+   Only control-sizing tokens change.
+   ========================================================================== */
+[data-density="compact"] {
+  --fh-control-height:    2rem;      /* 32 */
+  --fh-control-height-sm: 1.75rem;   /* 28 */
+  --fh-control-height-lg: 2.5rem;    /* 40 */
+  --fh-control-pad-x:     var(--fh-space-3);
+  --fh-control-pad-x-sm:  var(--fh-space-2);
+  --fh-control-font:      var(--fh-text-xs);
+  --fh-control-radius:    var(--fh-radius-sm);
+
+  --fh-table-cell-pad-y:  var(--fh-space-1);
+  --fh-table-cell-pad-x:  var(--fh-space-3);
+  --fh-card-pad:          var(--fh-space-4);
+  --fh-stack-gap:         var(--fh-space-3);
+}
+
+/* ==========================================================================
+   PRODUCT / ERP PROFILE — opt-in operational tuning for app surfaces.
+   Add data-profile="product" to <html> (composes with theme + density).
+   Marketing surfaces leave it off and keep the expressive brand defaults.
+   It (1) standardises headings AND body on one modern humanist-geometric face
+   (Plus Jakarta Sans) for a sharp, cohesive operational look, and (2) tightens
+   secondary-text contrast so data reads crisp. Tabular numerals are applied
+   under the same selector in base.css. The print brand was tuned for impact;
+   this profile is its operational counterpart (the "Beacon" component identity
+   lives in components.css under the same selector). The consumer app must load
+   the Plus Jakarta Sans face.
+   ========================================================================== */
+[data-profile="product"] {
+  /* One UI face for headings + body; brand/marketing keeps Montserrat + Nunito. */
+  --fh-font-ui:      "Plus Jakarta Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --fh-font-heading: var(--fh-font-ui);
+  --fh-font-body:    var(--fh-font-ui);
+  --fh-color-text-muted:  var(--fh-neutral-700);
+  --fh-color-text-subtle: var(--fh-neutral-600);
+}
+[data-theme="dark"][data-profile="product"] {
+  --fh-color-text-muted:  var(--fh-neutral-200);
+  --fh-color-text-subtle: var(--fh-neutral-300);
+}
+@media (prefers-color-scheme: dark) {
+  [data-theme="auto"][data-profile="product"] {
+    --fh-color-text-muted:  var(--fh-neutral-200);
+    --fh-color-text-subtle: var(--fh-neutral-300);
+  }
+}

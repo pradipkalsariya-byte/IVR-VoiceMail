@@ -1,0 +1,21 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: front-desk-db
+    environment:
+      POSTGRES_USER: nucleus
+      POSTGRES_PASSWORD: nucleus
+      POSTGRES_DB: front_desk
+    ports:
+      # Host 5446 -> container 5432 (siblings hold 5434-5445; 5444 was lost to roster-api's container, 2026-08-09).
+      - "5446:5432"
+    volumes:
+      - front-desk-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U nucleus -d front_desk"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  front-desk-pgdata:

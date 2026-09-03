@@ -1,0 +1,31 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Severity stripes on request cards — semantic urgency colour on a 4px left edge, mapped to
+   the DS tokens so they follow the theme. `low` is deliberately near-invisible: the stripe
+   exists to make critical/high jump out, not to decorate every card equally. */
+.fh-card.stripe-critical { border-left: 4px solid var(--fh-color-danger); }
+.fh-card.stripe-high     { border-left: 4px solid var(--fh-color-warning); }
+.fh-card.stripe-normal   { border-left: 4px solid var(--fh-color-primary); }
+.fh-card.stripe-low      { border-left: 4px solid var(--fh-color-border); }
+
+/* Print: drop the app chrome + controls so a queue / record / oversight page prints clean.
+   The hamburger lives inside .fh-navbar, so it goes with it (workspace CLAUDE.md shape). */
+@media print {
+  .fh-sidebar,
+  .fh-navbar,
+  .no-print {
+    display: none !important;
+  }
+  .fh-appshell {
+    display: block !important;
+  }
+  main {
+    max-width: none !important;
+    padding: 0 !important;
+  }
+  body {
+    background: #fff !important;
+  }
+}

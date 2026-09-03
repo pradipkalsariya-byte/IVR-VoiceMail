@@ -1,0 +1,23 @@
+/* ==========================================================================
+   Fountainhead Design System — single entry point
+   --------------------------------------------------------------------------
+   Link this one file to pull in the whole system:
+
+     <link rel="stylesheet" href="css/fountainhead.css">
+
+   ...or import the layers individually if you only need some of them.
+   Load order matters: tokens -> base -> components -> utilities -> print.
+   Utilities come after components so their !important helpers win; print is
+   last (media/class-scoped paper documents + @media print defaults).
+
+   Fonts: load Montserrat + Nunito before this (see assets/fonts.md), e.g.
+     <link rel="preconnect" href="https://fonts.googleapis.com">
+     <link rel="stylesheet"
+       href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,400;0,500;0,600;0,700;0,800;1,700&family=Nunito:wght@400;600;700&display=swap">
+   ========================================================================== */
+
+@import "tokens.css";
+@import "base.css";
+@import "components.css";
+@import "utilities.css";
+@import "print.css";

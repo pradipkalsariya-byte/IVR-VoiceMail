@@ -1,0 +1,47 @@
+{
+  "name": "front-desk-prototype",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Front Desk Request System — proof of concept for an integrated parent request desk (email · call · WhatsApp · walk-in · staff · event) across FSK/FWGS/FSM/FALH. Seeded with synthetic data shaped from the 2026-08-05 mail analysis; no real parent data.",
+  "scripts": {
+    "dev": "next dev -p 4200",
+    "build": "next build",
+    "start": "next start -p 4200",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "db:up": "docker compose up -d",
+    "db:down": "docker compose down",
+    "db:migrate": "prisma migrate dev",
+    "db:reset": "prisma migrate reset --force",
+    "prisma:generate": "prisma generate",
+    "seed": "tsx prisma/seed.ts",
+    "gmail:authorize": "tsx tools/gmail-authorize.ts",
+    "mbox:fixture": "tsx tools/mbox/make-fixture.ts .scratch/fixture.mbox",
+    "mbox:analyse": "tsx tools/mbox/analyse.ts",
+    "takeout": "tsx tools/mbox/takeout.ts"
+  },
+  "prisma": {
+    "seed": "tsx prisma/seed.ts"
+  },
+  "dependencies": {
+    "@prisma/client": "^6.19.3",
+    "next": "^15.5.19",
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7",
+    "server-only": "^0.0.1",
+    "xlsx": "^0.18.5"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "@types/react": "^19.2.17",
+    "@types/react-dom": "^19.2.3",
+    "autoprefixer": "^10.4.20",
+    "postcss": "^8.4.49",
+    "prisma": "^6.19.3",
+    "tailwindcss": "^3.4.17",
+    "tsx": "^4.23.1",
+    "typescript": "^5.7.2",
+    "vitest": "^2.1.8"
+  }
+}

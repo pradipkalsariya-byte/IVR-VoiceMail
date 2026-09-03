@@ -1,0 +1,48 @@
+/* Beacon (Fountainhead DS product profile) — app-side glue. Imported AFTER fountainhead.css
+   so these win the cascade over the design-system defaults. Mirrors cafeteria-checkin/app/beacon.css;
+   the DS itself is vendored at styles/fountainhead/ (see the README there for why). */
+
+/* Font bridge: the DS sets --fh-font-ui to the literal "Plus Jakarta Sans" family under
+   [data-profile="product"], but next/font registers the face under a hashed family name exposed as
+   --font-plus-jakarta. Repoint the DS token to that variable so DS components (.fh-*) render the
+   actually-loaded face. (Tailwind utilities are handled by the fontFamily override in tailwind.config.ts.) */
+[data-profile='product'] {
+  --fh-font-ui: var(--font-plus-jakarta), system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --fh-font-heading: var(--fh-font-ui);
+  --fh-font-body: var(--fh-font-ui);
+}
+
+/* App shell: keep the sidebar + the topbar in view while the page scrolls (desktop only;
+   ≤768px the DS collapses .fh-appshell to a single column). */
+@media (min-width: 769px) {
+  [data-profile='product'] .fh-sidebar {
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow-y: auto;
+  }
+}
+[data-profile='product'] .fh-navbar {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+}
+
+/* Sidebar item internals: icon + label. */
+.bcn-ic {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.bcn-ic svg {
+  width: 18px;
+  height: 18px;
+  display: block;
+}
+.bcn-lbl {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  min-width: 0;
+}

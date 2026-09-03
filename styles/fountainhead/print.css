@@ -1,0 +1,194 @@
+/* ==========================================================================
+   Fountainhead Design System — Print
+   --------------------------------------------------------------------------
+   (1) .fh-sheet — a paper document (fee receipt, report sheet, ID card) that
+       previews 1:1 on screen and prints clean. Size via modifiers.
+   (2) @media print defaults — hide app chrome, flatten elevation, keep exact
+       colours for chips/badges.
+   (3) Helpers — .fh-print-only, .fh-u-print-hidden, .fh-print-break.
+   Loaded last from fountainhead.css; all rules are media- or class-scoped.
+   ========================================================================== */
+
+/* --- The paper sheet ------------------------------------------------------ */
+.fh-sheet {
+  box-sizing: border-box;
+  width: 210mm;                          /* A4 portrait by default */
+  margin-inline: auto;
+  padding: 12mm 14mm;
+  background: #fff;
+  color: var(--fh-neutral-900);          /* documents stay ink-on-paper in any theme */
+  border: 1px solid var(--fh-color-border);
+  border-radius: 2px;
+  box-shadow: var(--fh-shadow-lg);       /* screen preview only; removed in print */
+  font-size: 0.8125rem;                  /* 13px document base */
+  line-height: 1.45;
+}
+.fh-sheet--a5   { width: 148mm; }
+.fh-sheet--card { width: 85.6mm; padding: 6mm; border-radius: 3mm; }  /* CR80 ID card */
+
+/* Document header: brand lockup left, document title/meta right, brand rule under */
+.fh-sheet__head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--fh-space-4);
+  padding-bottom: var(--fh-space-3);
+  margin-bottom: var(--fh-space-4);
+  border-bottom: 2px solid var(--fh-blue-600);
+}
+.fh-sheet__doc {
+  font-family: var(--fh-font-heading);
+  font-weight: var(--fh-weight-bold);
+  letter-spacing: var(--fh-tracking-wide);
+  text-transform: uppercase;
+  color: var(--fh-blue-800);
+}
+.fh-sheet__foot {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: var(--fh-space-6);
+  margin-top: var(--fh-space-8);
+}
+.fh-sheet__sign {
+  min-width: 11rem;
+  padding-top: var(--fh-space-8);
+  border-top: 1px solid var(--fh-neutral-400);
+  text-align: center;
+  font-size: var(--fh-text-xs);
+  color: var(--fh-neutral-600);
+}
+
+/* Tables inside a sheet stay crisp and bordered regardless of theme */
+.fh-sheet .fh-table th,
+.fh-sheet .fh-table td { border: 1px solid var(--fh-neutral-200); }
+.fh-sheet .fh-table thead th { background: var(--fh-blue-50); color: var(--fh-blue-800); }
+
+/* --- The assembled document (multi-sheet: handbook, report card set, transcript) ------
+   A .fh-doc is a STACK of .fh-sheet pages that page-break cleanly and number themselves:
+     <div class="fh-doc">
+       <div class="fh-sheet"> …cover (.fh-doc__cover)…    </div>
+       <div class="fh-sheet"> …TOC (.fh-doc__toc)…        </div>
+       <div class="fh-sheet"> …section… <div class="fh-sheet__runfoot">…</div> </div>
+     </div>
+   Page numbers are CSS counters — nothing is hand-numbered; the assembled artifact is an
+   OUTPUT, never a maintained document (the handbook rule: governance stays on each
+   policy, the book is assembled from current versions on demand). */
+.fh-doc { counter-reset: fh-page; display: flex; flex-direction: column; gap: var(--fh-space-6); }
+.fh-doc .fh-sheet { counter-increment: fh-page; display: flex; flex-direction: column; min-height: 297mm; }
+.fh-doc .fh-sheet > :last-child { margin-top: auto; }   /* the runfoot sits on the paper's bottom edge */
+
+/* Running footer: identity left (version · effective date), page number right */
+.fh-sheet__runfoot {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: var(--fh-space-4);
+  padding-top: var(--fh-space-3);
+  margin-top: var(--fh-space-6);
+  border-top: 1px solid var(--fh-neutral-300);
+  font-size: var(--fh-text-xs);
+  color: var(--fh-neutral-600);
+}
+.fh-sheet__pageno::after { content: "Page " counter(fh-page); }
+
+/* Cover: a calm title page — the brand rule, the document, the campus, the stamp line */
+.fh-doc__cover {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  flex: 1;
+  gap: var(--fh-space-3);
+}
+.fh-doc__covertitle {
+  font-family: var(--fh-font-heading);
+  font-weight: var(--fh-weight-bold);
+  font-size: 2rem;
+  color: var(--fh-blue-800);
+  letter-spacing: -0.02em;
+}
+.fh-doc__coversub { font-size: var(--fh-text-base); color: var(--fh-neutral-600); }
+.fh-doc__coverstamp {
+  margin-top: var(--fh-space-8);
+  font-size: var(--fh-text-xs);
+  color: var(--fh-neutral-600);
+  border-top: 1px solid var(--fh-neutral-300);
+  padding-top: var(--fh-space-3);
+}
+
+/* TOC: dotted leaders, no hand-typed page numbers in real use (assembly fills them) */
+.fh-doc__toc { list-style: none; margin: 0; padding: 0; }
+.fh-doc__toc li {
+  display: flex;
+  align-items: baseline;
+  gap: var(--fh-space-2);
+  padding: var(--fh-space-1) 0;
+  font-size: 0.875rem;
+}
+.fh-doc__tocleader { flex: 1; border-bottom: 2px dotted var(--fh-neutral-300); }
+.fh-doc__tocpage { font-variant-numeric: tabular-nums; color: var(--fh-neutral-600); }
+
+/* Section opener inside a sheet */
+.fh-doc__sectionhead {
+  display: flex;
+  align-items: baseline;
+  gap: var(--fh-space-3);
+  padding-bottom: var(--fh-space-2);
+  margin-bottom: var(--fh-space-4);
+  border-bottom: 2px solid var(--fh-blue-600);
+}
+.fh-doc__sectionnum {
+  font-family: var(--fh-font-heading);
+  font-weight: var(--fh-weight-bold);
+  color: var(--fh-blue-600);
+}
+.fh-doc__sectiontitle {
+  font-family: var(--fh-font-heading);
+  font-weight: var(--fh-weight-semibold);
+  font-size: 1.125rem;
+  color: var(--fh-neutral-900);
+}
+
+/* --- Helpers --------------------------------------------------------------- */
+.fh-print-only { display: none !important; }
+
+/* --- Print defaults --------------------------------------------------------- */
+@media print {
+  * {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  body { background: #fff !important; }
+
+  /* App chrome and interactive controls have no meaning on paper */
+  .fh-sidebar, .fh-navbar, .fh-toolbar, .fh-pagination, .fh-bulkbar,
+  .fh-toaster, .fh-btn, .fh-tabs, .fh-u-print-hidden { display: none !important; }
+  .fh-appshell { display: block; }
+
+  /* The workbench prints as ONE flat record: every tab pane visible ([hidden] carries the
+     screen's tab selection, which has no meaning on paper — a printed record missing its
+     unselected tabs would be a lie), zones stacked. The tab strip is already hidden above. */
+  .fh-workbench { display: block; }
+  .fh-workbench > * { margin-bottom: var(--fh-space-4); }
+  .fh-workbench__pane[hidden] { display: flex !important; }
+
+  /* Flatten elevation; hairlines carry structure on paper */
+  .fh-card, .fh-table-wrap, .fh-stat { box-shadow: none !important; }
+
+  .fh-print-only { display: revert !important; }
+  .fh-print-break { break-after: page; }
+  .fh-doc { gap: 0; }
+  .fh-doc .fh-sheet { break-after: page; min-height: auto; }
+
+  .fh-sheet {
+    width: auto;
+    margin: 0;
+    padding: 0;
+    border: none;
+    border-radius: 0;
+    box-shadow: none !important;
+  }
+  @page { margin: 14mm; }
+}

@@ -1,0 +1,132 @@
+/* ==========================================================================
+   Fountainhead Design System — Utilities
+   A small, deliberate set of helper classes (all "fh-u-" prefixed) plus the
+   layout primitives (container, stack, cluster, grid). Not a full utility
+   framework — just the helpers most apps reach for. Tokens stay the source
+   of truth; reach for utilities, not magic numbers.
+   ========================================================================== */
+
+/* Layout container */
+.fh-container {
+  width: 100%;
+  max-width: var(--fh-container-max);
+  margin-inline: auto;
+  padding-inline: var(--fh-space-4);
+}
+.fh-container--narrow { max-width: 760px; }
+.fh-container--wide   { max-width: 1440px; }
+
+/* Stack — vertical rhythm */
+.fh-stack { display: flex; flex-direction: column; gap: var(--fh-stack-gap); }
+.fh-stack--1 { gap: var(--fh-space-1); }
+.fh-stack--2 { gap: var(--fh-space-2); }
+.fh-stack--3 { gap: var(--fh-space-3); }
+.fh-stack--4 { gap: var(--fh-space-4); }
+.fh-stack--6 { gap: var(--fh-space-6); }
+.fh-stack--8 { gap: var(--fh-space-8); }
+
+/* Cluster — horizontal group that wraps */
+.fh-cluster {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--fh-space-3);
+}
+.fh-cluster--2 { gap: var(--fh-space-2); }
+.fh-cluster--4 { gap: var(--fh-space-4); }
+.fh-cluster--between { justify-content: space-between; }
+.fh-cluster--end { justify-content: flex-end; }
+
+/* Simple responsive auto-grid */
+.fh-grid {
+  display: grid;
+  gap: var(--fh-space-4);
+  grid-template-columns: repeat(auto-fill, minmax(var(--fh-grid-min, 240px), 1fr));
+}
+.fh-grid--2 { grid-template-columns: repeat(2, 1fr); }
+.fh-grid--3 { grid-template-columns: repeat(3, 1fr); }
+.fh-grid--4 { grid-template-columns: repeat(4, 1fr); }
+@media (max-width: 768px) {
+  .fh-grid--2, .fh-grid--3, .fh-grid--4 { grid-template-columns: 1fr; }
+}
+
+/* Display */
+.fh-u-hidden { display: none !important; }
+.fh-u-block { display: block !important; }
+.fh-u-flex { display: flex !important; }
+.fh-u-inline-flex { display: inline-flex !important; }
+.fh-u-grow { flex: 1 1 auto !important; }
+
+/* Text helpers */
+.fh-u-text-center { text-align: center !important; }
+.fh-u-text-right  { text-align: right !important; }
+.fh-u-text-left   { text-align: left !important; }
+.fh-u-truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.fh-u-text-muted   { color: var(--fh-color-text-muted) !important; }
+.fh-u-text-subtle  { color: var(--fh-color-text-subtle) !important; }
+.fh-u-tabular      { font-variant-numeric: tabular-nums !important; }
+.fh-u-font-ui      { font-family: var(--fh-font-ui) !important; }
+.fh-u-font-heading { font-family: var(--fh-font-heading) !important; }
+.fh-u-text-primary { color: var(--fh-color-primary-text) !important; }
+.fh-u-text-danger  { color: var(--fh-color-danger-text) !important; }
+.fh-u-text-success { color: var(--fh-color-success-text) !important; }
+/* The trio was primary/danger/success only — an app reaching for warning text had to hand-roll it
+   (myp-results used raw `text-amber-700`). Completing the set removes that excuse. */
+.fh-u-text-warning { color: var(--fh-color-warning-text) !important; }
+/* Null/placeholder values never take title slots — render them subtle-italic
+   ("unnamed", "not set"); the row is titled by its real identifier. */
+.fh-u-null { color: var(--fh-color-text-subtle) !important; font-style: italic !important; }
+
+/* Brand colour helpers */
+.fh-u-bg-primary   { background: var(--fh-color-primary) !important; color: var(--fh-color-primary-fg) !important; }
+.fh-u-bg-secondary { background: var(--fh-color-secondary) !important; color: var(--fh-color-secondary-fg) !important; }
+.fh-u-bg-accent    { background: var(--fh-color-accent) !important; color: var(--fh-color-accent-fg) !important; }
+.fh-u-bg-surface   { background: var(--fh-color-surface) !important; }
+.fh-u-bg-sunken    { background: var(--fh-color-surface-sunken) !important; }
+
+/* Elevation */
+.fh-u-shadow-sm { box-shadow: var(--fh-shadow-sm) !important; }
+.fh-u-shadow-md { box-shadow: var(--fh-shadow-md) !important; }
+.fh-u-shadow-lg { box-shadow: var(--fh-shadow-lg) !important; }
+
+/* Radius */
+.fh-u-rounded     { border-radius: var(--fh-radius-md) !important; }
+.fh-u-rounded-lg  { border-radius: var(--fh-radius-lg) !important; }
+.fh-u-rounded-full{ border-radius: var(--fh-radius-full) !important; }
+
+/* Spacing escape hatches (use sparingly) */
+.fh-u-mt-0 { margin-top: 0 !important; }
+.fh-u-mt-2 { margin-top: var(--fh-space-2) !important; }
+.fh-u-mt-4 { margin-top: var(--fh-space-4) !important; }
+.fh-u-mt-6 { margin-top: var(--fh-space-6) !important; }
+.fh-u-mt-8 { margin-top: var(--fh-space-8) !important; }
+.fh-u-mb-0 { margin-bottom: 0 !important; }
+.fh-u-mb-2 { margin-bottom: var(--fh-space-2) !important; }
+.fh-u-mb-4 { margin-bottom: var(--fh-space-4) !important; }
+.fh-u-mb-6 { margin-bottom: var(--fh-space-6) !important; }
+
+/* Accessibility: visually hidden but available to screen readers */
+.fh-u-visually-hidden {
+  position: absolute !important;
+  width: 1px; height: 1px;
+  padding: 0; margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* 45 / 45 / 10 brand colour proportion bar (from the guidelines) */
+.fh-proportion {
+  display: flex;
+  height: var(--fh-space-3);
+  border-radius: var(--fh-radius-full);
+  overflow: hidden;
+}
+.fh-proportion > span:nth-child(1) { flex: 0 0 45%; background: var(--fh-color-primary); }
+.fh-proportion > span:nth-child(2) { flex: 0 0 45%; background: var(--fh-color-secondary); }
+.fh-proportion > span:nth-child(3) { flex: 0 0 10%; background: var(--fh-color-accent); }
