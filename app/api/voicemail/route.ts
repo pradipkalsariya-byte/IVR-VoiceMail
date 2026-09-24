@@ -1,12 +1,11 @@
-// POST /api/voicemail — the IVR "press 2 to leave a message" endpoint (BACKLOG's ready item;
-// see docs/IVR-VOICEMAIL-BRIEF.md, "the technical half", for the field list and the vendor
-// conversation this was specified against).
+// POST/GET /api/voicemail — the YOCC/way2voice.in call webhook (their integration doc,
+// 24-Sep-2026, supersedes docs/IVR-VOICEMAIL-BRIEF.md's earlier ASSUMED field list — see
+// core/voicemail.ts's "REAL vendor shape" section for what changed and why).
 //
-// Dormant unless VOICEMAIL_WEBHOOK_TOKEN is set: without it the route answers 404, same shape
-// as app/api/bridge/requests/route.ts — a deploy with no PBX wired carries no new surface at
-// all. middleware.ts excludes this path from the shared testing-phase passcode for the same
-// reason it excludes /api/health: the vendor has no way to supply that passcode, and this
-// route carries its own auth (the X-Voicemail-Token shared secret) instead.
+// Their own doc shows no auth header at all, so this route does NOT require one by default —
+// VOICEMAIL_WEBHOOK_TOKEN, if set, is checked only when a token IS supplied and must then be
+// right; a request with no token header at all is still accepted, matching their spec exactly.
+// (Tighten this once the vendor confirms they can add a custom header, or gate by IP instead.)
 
 import { NextResponse, type NextRequest } from 'next/server';
 import { revalidatePath } from 'next/cache';
@@ -16,18 +15,15 @@ import { nextRequestNumber } from '@/lib/ref';
 import { recomputeClustersDb } from '@/lib/clusters';
 import { secretMatches } from '@/core/bridge';
 import {
-  buildVoicemailCapture, parseVoicemailPayload, resolveVoicemailTeam, voicemailSourceMessageId,
+  buildCallWebhookCapture, callWebhookSourceMessageId, parseCallWebhookPayload,
+  resolveVoicemailCampus, resolveVoicemailTeam, type RawCallWebhookPayload,
 } from '@/core/voicemail';
 import { getTranscriber } from '@/core/transcribe';
 import { notifyVoicemailTeam } from '@/lib/notify-voicemail';
 
-/**
- * `VOICEMAIL_LINE_CAMPUS_MAP="919900001234:fsk,919900005678:fwgs"` — which dialled number maps
- * to which campus CODE (matched against OrgUnit.code, same vocabulary the seed and the other
- * ingestion paths already use). Parsed fresh per request: this is config, not hot-path work,
- * and a single POST is nowhere near the volume where that would matter.
- */
-function lineCampusMapFromEnv(env: NodeJS.ProcessEnv): Map<string, string> {
+/** `AGENT_CAMPUS_MAP="9225214602:fsk,9225214603:fwgs"` — which AgentNo maps to which campus
+ *  CODE. Reuses VOICEMAIL_LINE_CAMPUS_MAP's env var name for continuity with existing config. */
+function agentCampusMapFromEnv(env: NodeJS.ProcessEnv): Map<string, string> {
   const raw = env.VOICEMAIL_LINE_CAMPUS_MAP ?? '';
   const out = new Map<string, string>();
   for (const pair of raw.split(',')) {
@@ -37,64 +33,44 @@ function lineCampusMapFromEnv(env: NodeJS.ProcessEnv): Map<string, string> {
   return out;
 }
 
-/**
- * `VOICEMAIL_MENU_TEAM_MAP="Front Desk:frontdesk@fsksurat.in,Transport:transport@fsksurat.in"`
- * — which IVR menu selection routes to which team's mailbox. Keys are lower-cased here so
- * core/voicemail.ts's resolveVoicemailTeam can match case-insensitively against whatever
- * casing the vendor actually sends per call.
- */
-function menuTeamMapFromEnv(env: NodeJS.ProcessEnv): Map<string, string> {
+/** `AGENT_TEAM_MAP="9225214602:frontdesk@fsksurat.in,9225214603:transport@fsksurat.in"` — which
+ *  AgentNo emails which team. Reuses VOICEMAIL_MENU_TEAM_MAP's env var name. */
+function agentTeamMapFromEnv(env: NodeJS.ProcessEnv): Map<string, string> {
   const raw = env.VOICEMAIL_MENU_TEAM_MAP ?? '';
   const out = new Map<string, string>();
   for (const pair of raw.split(',')) {
-    const [menu, email] = pair.split(':').map(s => s?.trim());
-    if (menu && email) out.set(menu.toLowerCase(), email);
+    const [agent, email] = pair.split(':').map(s => s?.trim());
+    if (agent && email) out.set(agent.toLowerCase(), email);
   }
   return out;
 }
 
-export async function POST(req: NextRequest) {
+/** Best-effort guess at the recording's content type from its URL, when the host doesn't say. */
+function contentTypeFromUrl(url: string): string {
+  const ext = url.split('.').pop()?.toLowerCase().split(/[?#]/)[0];
+  if (ext === 'mp3') return 'audio/mpeg';
+  if (ext === 'wav') return 'audio/wav';
+  if (ext === 'ogg') return 'audio/ogg';
+  return 'application/octet-stream';
+}
+
+async function handle(req: NextRequest, raw: RawCallWebhookPayload) {
   const secret = process.env.VOICEMAIL_WEBHOOK_TOKEN;
-  if (!secret) return new NextResponse(null, { status: 404 });
-  if (!secretMatches(secret, req.headers.get('x-voicemail-token'))) {
+  const givenToken = req.headers.get('x-voicemail-token');
+  if (secret && givenToken && !secretMatches(secret, givenToken)) {
     return NextResponse.json({ reason: 'Bad voicemail token.' }, { status: 401 });
   }
 
-  let form: FormData;
-  try {
-    form = await req.formData();
-  } catch {
-    return NextResponse.json({ reason: 'Body must be multipart/form-data.' }, { status: 400 });
-  }
-
-  const audio = form.get('audio');
-  if (!(audio instanceof File)) {
-    return NextResponse.json({ reason: 'audio is required.' }, { status: 400 });
-  }
-
-  const parsed = parseVoicemailPayload({
-    callId: form.get('callId'),
-    callerNumber: form.get('callerNumber'),
-    dialledNumber: form.get('dialledNumber'),
-    startedAt: form.get('startedAt'),
-    durationSeconds: form.get('durationSeconds'),
-    audioContentType: audio.type || 'application/octet-stream',
-    audioSizeBytes: audio.size,
-    menu: form.get('menu'),
-  });
+  const parsed = parseCallWebhookPayload(raw);
   if (!parsed.ok) return NextResponse.json({ reason: parsed.reason }, { status: 400 });
   const v = parsed.value;
 
-  // Idempotent retry (brief step 1): a callId already on file means this is a redelivery, not a
-  // second call. Reply 200 with the SAME reference — never re-transcribe, never create a sibling.
-  const sourceMessageId = voicemailSourceMessageId(v.callId);
-  const existing = await db.request.findUnique({
-    where: { sourceMessageId }, select: { ref: true },
-  });
+  // Idempotent retry: the same call (caller + instant) resolves to the same reference — the
+  // vendor's doc gives us no call id to key on, so the call itself IS the key.
+  const sourceMessageId = callWebhookSourceMessageId(v.callerNo, v.startedAt);
+  const existing = await db.request.findUnique({ where: { sourceMessageId }, select: { ref: true } });
   if (existing) return NextResponse.json({ ref: existing.ref }, { status: 200 });
 
-  // Blocked callers never become slips here either (same policy core/ingest.ts's missed-call
-  // explosion already applies) — acked with 200 so the PBX does not retry, but nothing is filed.
   if (v.callerPhone) {
     const blocked = await db.blockedCaller.findUnique({ where: { phoneKey: v.callerPhone } });
     if (blocked) return NextResponse.json({ skipped: 'blocked-caller' }, { status: 200 });
@@ -104,38 +80,49 @@ export async function POST(req: NextRequest) {
   if (campuses.length === 0) {
     return NextResponse.json({ reason: 'No campus is seeded yet.' }, { status: 500 });
   }
-  // A configured code that names no real campus (typo, stale config after a campus is
-  // renamed) must fall through to fallbackCampus below, never sneak the raw code string in as
-  // if it were an org-unit id — that would fail the Request→OrgUnit foreign key at create time
-  // instead of degrading gracefully to "unmapped line".
-  const lineToCampus = new Map<string, string>();
-  for (const [num, code] of lineCampusMapFromEnv(process.env)) {
+  const agentToCampus = new Map<string, string>();
+  for (const [agent, code] of agentCampusMapFromEnv(process.env)) {
     const campus = campuses.find(c => c.code === code);
-    if (campus) lineToCampus.set(num, campus.id);
+    if (campus) agentToCampus.set(agent, campus.id);
   }
   const fallbackCampus = campuses.find(c => c.code === 'fsk')?.id ?? campuses[0].id;
-  const campusHit = lineToCampus.get(v.dialledNumber.trim());
-  const campusOrgUnitId = campusHit ?? fallbackCampus;
+  const { campus: campusOrgUnitId } = resolveVoicemailCampus(v.agentNo, agentToCampus, fallbackCampus);
 
   const familyMatch = v.callerPhone
     ? await db.familyPhone.findFirst({ where: { phoneKey: v.callerPhone }, select: { familyId: true } })
     : null;
 
-  const audioBuffer = Buffer.from(await audio.arrayBuffer());
-
-  // Transcription failure must never lose the call (brief step 2) — whatever happens here,
-  // execution falls through to create the record either way.
-  let transcript: string | null = null;
-  try {
-    const result = await getTranscriber().transcribe({
-      audio: audioBuffer, contentType: v.audioContentType, durationSeconds: v.durationSeconds,
-    });
-    transcript = result?.text ?? null;
-  } catch {
-    transcript = null;
+  // Fetch the recording ourselves when the vendor gave us a URL — their side hosts it, but we
+  // hold the audio (brief's own retention ask). Never fatal: if the fetch fails, the record is
+  // still created, marked needs-a-listen, with the URL itself kept on the record's audio row.
+  let audioBuffer: Buffer<ArrayBuffer> | null = null;
+  let audioContentType: string | null = null;
+  if (v.recordingUrl) {
+    try {
+      const res = await fetch(v.recordingUrl, { signal: AbortSignal.timeout(15_000) });
+      if (res.ok) {
+        audioBuffer = Buffer.from(new Uint8Array(await res.arrayBuffer()));
+        audioContentType = res.headers.get('content-type') || contentTypeFromUrl(v.recordingUrl);
+      }
+    } catch {
+      audioBuffer = null;
+    }
   }
 
-  const capture = buildVoicemailCapture(v, { campusOrgUnitId, transcript });
+  let transcript: string | null = null;
+  if (audioBuffer) {
+    try {
+      const result = await getTranscriber().transcribe({
+        audio: audioBuffer, contentType: audioContentType ?? 'application/octet-stream',
+        durationSeconds: v.durationSeconds,
+      });
+      transcript = result?.text ?? null;
+    } catch {
+      transcript = null;
+    }
+  }
+
+  const capture = buildCallWebhookCapture(v, { campusOrgUnitId, transcript });
   const ref = `FD-${String(await nextRequestNumber()).padStart(4, '0')}`;
   const now = new Date();
   const requestId = randomUUID();
@@ -162,55 +149,50 @@ export async function POST(req: NextRequest) {
       isAutomated: false,
       sourceMessageId: capture.sourceMessageId,
       messages: {
-        create: [{ id: randomUUID(), direction: 'in', senderLabel: 'IVR voicemail', at: capture.arrivedAt, body: capture.body }],
+        create: [{ id: randomUUID(), direction: 'in', senderLabel: 'IVR / call webhook', at: capture.arrivedAt, body: capture.body }],
       },
       activities: {
         create: [
           { id: randomUUID(), at: now, kind: 'note',
-            detail: `Captured from an IVR voicemail (call ${v.callId}) — nothing auto-enters the working queue; the desk files this like any capture.` },
+            detail: `Captured from the call webhook (${v.callStatus}, caller ${v.callerNo}) — nothing auto-enters the working queue; the desk files this like any capture.` },
           { id: randomUUID(), at: now, kind: 'classified',
             detail: `Suggested "${capture.suggestedCategory}" — ${capture.suggestionReason}` },
         ],
       },
-      voicemailAudio: {
-        create: {
-          id: randomUUID(),
-          dialledNumber: v.dialledNumber,
-          callerNumber: v.callerNumber,
-          ivrMenu: v.menu,
-          contentType: v.audioContentType,
-          sizeBytes: v.audioSizeBytes,
-          durationSeconds: v.durationSeconds,
-          audio: audioBuffer,
+      ...(audioBuffer ? {
+        voicemailAudio: {
+          create: {
+            id: randomUUID(),
+            dialledNumber: v.agentNo,
+            callerNumber: v.callerNo,
+            ivrMenu: null,
+            contentType: audioContentType ?? 'application/octet-stream',
+            sizeBytes: audioBuffer.length,
+            durationSeconds: v.durationSeconds,
+            audio: audioBuffer,
+          },
         },
-      },
+      } : {}),
     },
   });
 
-  // Route to the team the caller's IVR menu selection maps to (VK, 03-Sep-2026: email the
-  // respective team, not just file the record). Fire-and-forget by the same contract as
-  // lib/bridge-push.ts: the Request above is already the record of truth, so a Gmail outage or
-  // an unconfigured send-as alias must never fail this webhook — only what the caller sees.
   const team = resolveVoicemailTeam(
-    v.menu, menuTeamMapFromEnv(process.env), process.env.VOICEMAIL_FALLBACK_TEAM_EMAIL ?? '',
+    v.agentNo || null, agentTeamMapFromEnv(process.env), process.env.VOICEMAIL_FALLBACK_TEAM_EMAIL ?? '',
   );
   let notifyDetail = 'No team email configured — set VOICEMAIL_MENU_TEAM_MAP or VOICEMAIL_FALLBACK_TEAM_EMAIL.';
   if (team.email) {
     const appUrl = process.env.APP_BASE_URL;
     const subject = capture.needsListen
       ? `Voicemail needs a listen — ${ref}`
-      : `Voicemail (${capture.suggestedCategory}) — ${ref}`;
+      : `${v.callStatus} call (${capture.suggestedCategory}) — ${ref}`;
     const body = [
-      capture.body, // already the transcript, or the honest "could not be transcribed" wording
+      capture.body,
       '',
       `Reference: ${ref}`,
       appUrl ? `Open: ${appUrl}/r/${ref}` : `Open the Front Desk app and find ${ref} in the queue.`,
     ].join('\n');
-    const result = await notifyVoicemailTeam({
-      to: team.email, subject, body, boundarySeed: capture.sourceMessageId,
-    });
-    notifyDetail = `Routed by ${team.how} to ${team.email}. `
-      + (result.sent ? 'Emailed.' : `Not emailed — ${result.detail}`);
+    const result = await notifyVoicemailTeam({ to: team.email, subject, body, boundarySeed: capture.sourceMessageId });
+    notifyDetail = `Routed by ${team.how} to ${team.email}. ` + (result.sent ? 'Emailed.' : `Not emailed — ${result.detail}`);
   }
   await db.activity.create({
     data: { id: randomUUID(), requestId, at: new Date(), kind: 'note', detail: notifyDetail },
@@ -222,4 +204,30 @@ export async function POST(req: NextRequest) {
   revalidatePath('/oversight');
 
   return NextResponse.json({ ref }, { status: 200 });
+}
+
+export async function POST(req: NextRequest) {
+  let body: unknown;
+  try {
+    body = await req.json();
+  } catch {
+    return NextResponse.json({ reason: 'Body must be JSON.' }, { status: 400 });
+  }
+  if (typeof body !== 'object' || body === null) {
+    return NextResponse.json({ reason: 'Body must be a JSON object.' }, { status: 400 });
+  }
+  const o = body as Record<string, unknown>;
+  return handle(req, {
+    CallerNo: o.CallerNo, CallDate: o.CallDate, StartTime: o.StartTime, EndTime: o.EndTime,
+    AgentNo: o.AgentNo, CallStatus: o.CallStatus, recordingurl: o.recordingurl, CallType: o.CallType,
+  });
+}
+
+export async function GET(req: NextRequest) {
+  const q = req.nextUrl.searchParams;
+  return handle(req, {
+    CallerNo: q.get('CallerNo'), CallDate: q.get('CallDate'), StartTime: q.get('StartTime'),
+    EndTime: q.get('EndTime'), AgentNo: q.get('AgentNo'), CallStatus: q.get('CallStatus'),
+    recordingurl: q.get('recordingurl'), CallType: q.get('CallType'),
+  });
 }

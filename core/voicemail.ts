@@ -15,6 +15,7 @@
 
 import { normalisePhone } from './phone';
 import { getClassifier } from './classify';
+import { parseIstDateTime } from './missed-calls';
 import { addWorkingHours, clockStart, slaDue } from './sla';
 import type { Urgency } from './taxonomy';
 
@@ -248,5 +249,224 @@ export function buildVoicemailCapture(
     suggestedUrgency: 'normal',
     suggestionReason: 'The recording could not be transcribed — needs a person to listen to it.',
     needsListen: true,
+  };
+}
+
+// ---------------------------------------------------------------------------------------
+// The REAL vendor shape (YOCC / way2voice.in), from their integration doc — 24-Sep-2026.
+// Everything above this line was built against the brief's ASSUMED field list before a real
+// vendor spec existed; this is what they actually send. Kept alongside rather than replacing
+// it, since nothing else in the app depended on the old shape being removed.
+//
+// Genuinely different, not just renamed fields:
+//   - Plain JSON (or query params — their doc says "Method – POST / GET"), never multipart;
+//     the recording is a URL THEY host (`recordingurl`), never an uploaded file.
+//   - No callId at all — there is nothing to de-duplicate on except the call itself
+//     (caller + instant), the same fact core/missed-calls.ts already found true for the
+//     Synapse feed and solved the same way.
+//   - Three real outcomes, not one: Answered / Unanswered (rang the agent, nobody picked up)
+//     / Un-opted (caller never chose a menu option at all). Their own sample payload sends
+//     "Answered" WITH a recordingurl — so a recording is not proof a voicemail was left; it
+//     may be a full call recording. See the route's own comment for why that distinction
+//     matters (BACKLOG.md: full call recording is a separate, still-blocked decision from
+//     voicemail capture).
+// ---------------------------------------------------------------------------------------
+
+export type CallStatus = 'Answered' | 'Unanswered' | 'Un-opted';
+export type CallDirection = 'Inbound' | 'Outbound';
+
+export interface RawCallWebhookPayload {
+  CallerNo: unknown;
+  CallDate: unknown;
+  StartTime: unknown;
+  EndTime: unknown;
+  AgentNo: unknown;
+  CallStatus: unknown;
+  recordingurl: unknown;
+  CallType: unknown;
+}
+
+export interface ValidatedCallWebhook {
+  callerNo: string;
+  callerPhone: string | null;
+  startedAt: Date;
+  durationSeconds: number;
+  agentNo: string;
+  callStatus: CallStatus;
+  /** null when the vendor sent none — never assume every call carries one. */
+  recordingUrl: string | null;
+  callType: CallDirection;
+}
+
+const STATUS_MAP: Record<string, CallStatus> = {
+  answered: 'Answered',
+  unanswered: 'Unanswered',
+  'un-opted': 'Un-opted',
+  unopted: 'Un-opted',
+  'un opted': 'Un-opted',
+};
+
+/**
+ * Validate one call-webhook POST/GET in the vendor's own shape. A failure here is a 4xx — the
+ * payload itself doesn't parse, and retrying the same values won't fix that.
+ */
+export function parseCallWebhookPayload(x: RawCallWebhookPayload): Parsed<ValidatedCallWebhook> {
+  const callerNo = str(x.CallerNo);
+  if (!callerNo) return { ok: false, reason: 'CallerNo is required.' };
+
+  const callDate = str(x.CallDate);
+  const startTime = str(x.StartTime);
+  const endTime = str(x.EndTime);
+  if (!callDate || !startTime || !endTime) {
+    return { ok: false, reason: 'CallDate, StartTime and EndTime are all required.' };
+  }
+
+  const startedAt = parseIstDateTime(`${callDate} ${startTime}`);
+  const endedAt = parseIstDateTime(`${callDate} ${endTime}`);
+  if (!startedAt || !endedAt) {
+    return {
+      ok: false,
+      reason: 'CallDate must be YYYY-MM-DD and StartTime/EndTime must be HH:MM:SS, e.g. 2025-02-26 / 10:06:12.',
+    };
+  }
+
+  // EndTime a few seconds past midnight from a StartTime just before it is a real shape, not
+  // an error — the vendor's own sample gives no date for each clock reading separately.
+  let durationSeconds = Math.round((+endedAt - +startedAt) / 1000);
+  if (durationSeconds < 0) durationSeconds += 86400;
+  if (durationSeconds > MAX_DURATION_SECONDS) {
+    return { ok: false, reason: `Call duration is over ${MAX_DURATION_SECONDS}s.` };
+  }
+
+  const statusRaw = str(x.CallStatus) ?? '';
+  const callStatus = STATUS_MAP[statusRaw.toLowerCase()];
+  if (!callStatus) {
+    return {
+      ok: false,
+      reason: `CallStatus must be "Answered", "Unanswered" or "Un-opted"; got "${statusRaw}".`,
+    };
+  }
+
+  const callTypeRaw = (str(x.CallType) ?? '').toLowerCase();
+  const callType: CallDirection | null =
+    callTypeRaw === 'inbound' ? 'Inbound' : callTypeRaw === 'outbound' ? 'Outbound' : null;
+  if (!callType) {
+    return { ok: false, reason: `CallType must be "Inbound" or "Outbound"; got "${str(x.CallType)}".` };
+  }
+
+  const agentNo = str(x.AgentNo) ?? '';
+  const recordingUrl = str(x.recordingurl) || null;
+
+  return {
+    ok: true,
+    value: {
+      callerNo, callerPhone: normalisePhone(callerNo), startedAt, durationSeconds,
+      agentNo, callStatus, recordingUrl, callType,
+    },
+  };
+}
+
+/**
+ * De-duplication key when the vendor gives us no call id at all: the call itself (caller +
+ * instant), exactly the same fact and the same fix core/missed-calls.ts's
+ * `missedCallRowMessageId` already applied to the Synapse feed — a retried delivery of the
+ * SAME call must resolve to the SAME key, not a fresh Request row.
+ */
+export function callWebhookSourceMessageId(callerNo: string, startedAt: Date): string {
+  return `callwebhook-${callerNo}-${startedAt.toISOString()}`;
+}
+
+const CALL_STATUS_LABEL: Record<CallStatus, string> = {
+  Answered: 'was answered',
+  Unanswered: 'rang the agent but was not answered',
+  'Un-opted': 'never selected a menu option and disconnected',
+};
+
+export interface CallWebhookCapture {
+  channel: 'call';
+  subject: string;
+  body: string;
+  campusOrgUnitId: string;
+  arrivedAt: Date;
+  clockStartsAt: Date;
+  slaDueAt: Date;
+  sourceMessageId: string;
+  callerPhone: string | null;
+  isSwitchboard: false;
+  status: 'unfiled';
+  urgency: Urgency;
+  suggestedCategory: string;
+  suggestedUrgency: Urgency;
+  suggestionReason: string;
+  needsListen: boolean;
+  /** True only when the vendor sent a recordingurl — the audio-fetch step is worth attempting. */
+  hasRecording: boolean;
+}
+
+/**
+ * Build the Request-creation fields for one call-webhook event. PURE, same split as
+ * buildVoicemailCapture above: classification is deterministic and lives here; the actual
+ * fetch of `recordingUrl` and any transcription are I/O and stay in app/api/voicemail/route.ts.
+ */
+export function buildCallWebhookCapture(
+  v: ValidatedCallWebhook,
+  ctx: { campusOrgUnitId: string; transcript: string | null; classifierName?: string },
+): CallWebhookCapture {
+  const arrivedAt = v.startedAt;
+  const callerLabel = v.callerNo || 'a withheld number';
+  const sourceMessageId = callWebhookSourceMessageId(v.callerNo, v.startedAt);
+
+  if (ctx.transcript) {
+    const sug = getClassifier(ctx.classifierName ?? 'rules').classify({
+      subject: 'Voicemail', body: ctx.transcript, senderIsKnownFamily: false,
+    });
+    return {
+      channel: 'call',
+      subject: `Voicemail from ${callerLabel}`,
+      body: ctx.transcript,
+      campusOrgUnitId: ctx.campusOrgUnitId,
+      arrivedAt,
+      clockStartsAt: clockStart(arrivedAt),
+      slaDueAt: slaDue(arrivedAt, sug.urgency),
+      sourceMessageId,
+      callerPhone: v.callerPhone,
+      isSwitchboard: false,
+      status: 'unfiled',
+      urgency: sug.urgency,
+      suggestedCategory: sug.category,
+      suggestedUrgency: sug.urgency,
+      suggestionReason: sug.reason,
+      needsListen: false,
+      hasRecording: true,
+    };
+  }
+
+  const outcome = CALL_STATUS_LABEL[v.callStatus];
+  const needsListen = Boolean(v.recordingUrl);
+  return {
+    channel: 'call',
+    subject: needsListen
+      ? `Voicemail from ${callerLabel} — needs a listen`
+      : `Call from ${callerLabel} — ${outcome}`,
+    body: needsListen
+      ? 'A recording was captured, but it could not be transcribed. Listen to the recording '
+        + 'attached to this record to find out what it was about.'
+      : `The call ${outcome} (agent ${v.agentNo || 'unassigned'}). No recording was provided.`,
+    campusOrgUnitId: ctx.campusOrgUnitId,
+    arrivedAt,
+    clockStartsAt: clockStart(arrivedAt),
+    slaDueAt: slaDue(arrivedAt, 'normal'),
+    sourceMessageId,
+    callerPhone: v.callerPhone,
+    isSwitchboard: false,
+    status: 'unfiled',
+    urgency: 'normal',
+    suggestedCategory: 'unclassified',
+    suggestedUrgency: 'normal',
+    suggestionReason: needsListen
+      ? 'The recording could not be transcribed — needs a person to listen to it.'
+      : `The call ${outcome} — needs a person to read it.`,
+    needsListen,
+    hasRecording: Boolean(v.recordingUrl),
   };
 }
