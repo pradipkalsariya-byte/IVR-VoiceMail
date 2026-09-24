@@ -28,9 +28,15 @@ export function voicemailSourceMessageId(callId: string): string {
   return `${PREFIX}${callId}`;
 }
 
-/** 60-90s is what the brief expects; this is headroom, not a target — a live PBX clock can
- *  run long, and rejecting a genuine long message loses a family's call outright. */
+/** 60-90s is what the brief expects for a VOICEMAIL MESSAGE; this is headroom, not a target —
+ *  a live PBX clock can run long, and rejecting a genuine long message loses a family's call
+ *  outright. Used only by the old multipart voicemail-only path below. */
 export const MAX_DURATION_SECONDS = 600;
+
+/** The real vendor webhook (below) covers EVERY call, not just voicemail messages — an
+ *  "Answered" call can legitimately run an hour. This is a sanity ceiling against garbage
+ *  data, not a model of how long a message should be; see MAX_DURATION_SECONDS for that. */
+export const MAX_CALL_DURATION_SECONDS = 6 * 60 * 60;
 
 /** A 10-minute mono call at a generous bitrate should be nowhere near this — the cap exists to
  *  bound one webhook POST, not to model any particular vendor's real output size. */
@@ -334,8 +340,8 @@ export function parseCallWebhookPayload(x: RawCallWebhookPayload): Parsed<Valida
   // an error — the vendor's own sample gives no date for each clock reading separately.
   let durationSeconds = Math.round((+endedAt - +startedAt) / 1000);
   if (durationSeconds < 0) durationSeconds += 86400;
-  if (durationSeconds > MAX_DURATION_SECONDS) {
-    return { ok: false, reason: `Call duration is over ${MAX_DURATION_SECONDS}s.` };
+  if (durationSeconds > MAX_CALL_DURATION_SECONDS) {
+    return { ok: false, reason: `Call duration is over ${MAX_CALL_DURATION_SECONDS}s.` };
   }
 
   const statusRaw = str(x.CallStatus) ?? '';
