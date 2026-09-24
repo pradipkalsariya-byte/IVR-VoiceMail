@@ -59,10 +59,17 @@ COPY --from=build /app/public ./public
 # "Cannot find module 'effect'" — reproduced locally before ever reaching Railway.
 COPY --from=build /app/prisma ./prisma
 COPY --from=build /app/node_modules ./node_modules
+# core/ is NOT part of Next's own standalone trace (nothing in the request-handling graph
+# imports prisma/seed.ts), so the conditional first-boot seed below needs it copied explicitly.
+COPY --from=build /app/core ./core
+COPY scripts/docker-entrypoint.sh ./scripts/docker-entrypoint.sh
 
 USER nextjs
 EXPOSE 4200
 
-# On every start: apply pending migrations (FATAL — a bad schema never serves), then start the
-# standalone server on $PORT (Railway injects it; 4200 is the local fallback).
-CMD ["sh", "-c", "node node_modules/prisma/build/index.js migrate deploy && PORT=${PORT:-4200} node server.js"]
+# On every start: apply pending migrations (FATAL — a bad schema never serves), then seed the
+# synthetic demo data ONLY if the database is genuinely empty (see docker-entrypoint.sh) —
+# there is no other reliable way to bootstrap a brand-new deploy's database from outside
+# Railway's own dashboard, and this can never be skipped or pointed at the wrong database by
+# mistake the way a manually-run one-off command could be.
+CMD ["sh", "scripts/docker-entrypoint.sh"]
