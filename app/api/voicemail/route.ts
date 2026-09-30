@@ -15,7 +15,7 @@ import { nextRequestNumber } from '@/lib/ref';
 import { recomputeClustersDb } from '@/lib/clusters';
 import { secretMatches } from '@/core/bridge';
 import {
-  buildCallWebhookCapture, callWebhookSourceMessageId, parseCallWebhookPayload,
+  buildCallWebhookCapture, callWebhookSourceMessageId, parseCallWebhookPayload, pickField,
   resolveVoicemailCampus, resolveVoicemailTeam, type RawCallWebhookPayload,
 } from '@/core/voicemail';
 import { getTranscriber } from '@/core/transcribe';
@@ -54,7 +54,22 @@ function contentTypeFromUrl(url: string): string {
   return 'application/octet-stream';
 }
 
-async function handle(req: NextRequest, raw: RawCallWebhookPayload) {
+const RECORDING_KEYS = ['recordingurl', 'recording_url', 'recording', 'recordingfile', 'recordurl', 'callrecording'];
+
+function toRaw(o: Record<string, unknown>): RawCallWebhookPayload {
+  return {
+    CallerNo: pickField(o, 'CallerNo', 'caller_no', 'callernumber'),
+    CallDate: pickField(o, 'CallDate', 'call_date'),
+    StartTime: pickField(o, 'StartTime', 'start_time'),
+    EndTime: pickField(o, 'EndTime', 'end_time'),
+    AgentNo: pickField(o, 'AgentNo', 'agent_no', 'agentnumber'),
+    CallStatus: pickField(o, 'CallStatus', 'call_status', 'status'),
+    recordingurl: pickField(o, ...RECORDING_KEYS),
+    CallType: pickField(o, 'CallType', 'call_type'),
+  };
+}
+
+async function handle(req: NextRequest, raw: RawCallWebhookPayload, receivedKeys: string[]) {
   const secret = process.env.VOICEMAIL_WEBHOOK_TOKEN;
   const givenToken = req.headers.get('x-voicemail-token');
   if (secret && givenToken && !secretMatches(secret, givenToken)) {
@@ -97,15 +112,24 @@ async function handle(req: NextRequest, raw: RawCallWebhookPayload) {
   // still created, marked needs-a-listen, with the URL itself kept on the record's audio row.
   let audioBuffer: Buffer<ArrayBuffer> | null = null;
   let audioContentType: string | null = null;
+  let recordingNote = 'Recording: none sent by the vendor for this call.';
   if (v.recordingUrl) {
     try {
       const res = await fetch(v.recordingUrl, { signal: AbortSignal.timeout(15_000) });
-      if (res.ok) {
+      const type = res.headers.get('content-type') || contentTypeFromUrl(v.recordingUrl);
+      if (!res.ok) {
+        recordingNote = `Recording link ${v.recordingUrl} could not be downloaded (HTTP ${res.status}).`;
+      } else if (/text\/html/i.test(type)) {
+        // A login or error page answered with 200 — storing it as "audio" would give a silent player.
+        recordingNote = `Recording link ${v.recordingUrl} returned a web page, not audio — open it directly.`;
+      } else {
         audioBuffer = Buffer.from(new Uint8Array(await res.arrayBuffer()));
-        audioContentType = res.headers.get('content-type') || contentTypeFromUrl(v.recordingUrl);
+        audioContentType = type;
+        recordingNote = `Recording downloaded from ${v.recordingUrl} — ${Math.round(audioBuffer.length / 1024)} KB, ${type}.`;
       }
-    } catch {
+    } catch (err) {
       audioBuffer = null;
+      recordingNote = `Recording link ${v.recordingUrl} could not be downloaded (${err instanceof Error ? err.message : String(err)}).`;
     }
   }
 
@@ -122,7 +146,7 @@ async function handle(req: NextRequest, raw: RawCallWebhookPayload) {
     }
   }
 
-  const capture = buildCallWebhookCapture(v, { campusOrgUnitId, transcript });
+  const capture = buildCallWebhookCapture(v, { campusOrgUnitId, transcript, audioAttached: Boolean(audioBuffer) });
   const ref = `FD-${String(await nextRequestNumber()).padStart(4, '0')}`;
   const now = new Date();
   const requestId = randomUUID();
@@ -157,6 +181,10 @@ async function handle(req: NextRequest, raw: RawCallWebhookPayload) {
             detail: `Captured from the call webhook (${v.callStatus}, caller ${v.callerNo}) — nothing auto-enters the working queue; the desk files this like any capture.` },
           { id: randomUUID(), at: now, kind: 'classified',
             detail: `Suggested "${capture.suggestedCategory}" — ${capture.suggestionReason}` },
+          // Field NAMES only, never values — enough to see if the vendor renamed a field, without
+          // copying a caller's details into the trail twice.
+          { id: randomUUID(), at: now, kind: 'note',
+            detail: `${recordingNote} Fields received: ${receivedKeys.join(', ') || '(none)'}.` },
         ],
       },
       ...(audioBuffer ? {
@@ -217,17 +245,12 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ reason: 'Body must be a JSON object.' }, { status: 400 });
   }
   const o = body as Record<string, unknown>;
-  return handle(req, {
-    CallerNo: o.CallerNo, CallDate: o.CallDate, StartTime: o.StartTime, EndTime: o.EndTime,
-    AgentNo: o.AgentNo, CallStatus: o.CallStatus, recordingurl: o.recordingurl, CallType: o.CallType,
-  });
+  console.log(`[voicemail] POST fields: ${Object.keys(o).join(', ')}`);
+  return handle(req, toRaw(o), Object.keys(o));
 }
 
 export async function GET(req: NextRequest) {
-  const q = req.nextUrl.searchParams;
-  return handle(req, {
-    CallerNo: q.get('CallerNo'), CallDate: q.get('CallDate'), StartTime: q.get('StartTime'),
-    EndTime: q.get('EndTime'), AgentNo: q.get('AgentNo'), CallStatus: q.get('CallStatus'),
-    recordingurl: q.get('recordingurl'), CallType: q.get('CallType'),
-  });
+  const o = Object.fromEntries(req.nextUrl.searchParams.entries());
+  console.log(`[voicemail] GET fields: ${Object.keys(o).join(', ')}`);
+  return handle(req, toRaw(o), Object.keys(o));
 }

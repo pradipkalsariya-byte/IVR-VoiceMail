@@ -201,3 +201,28 @@ describe('buildVoicemailCapture — the Request-creation fields', () => {
     expect(first.sourceMessageId).toBe(second.sourceMessageId);
   });
 });
+
+import { normaliseRecordingUrl, pickField } from '../core/voicemail';
+
+describe('normaliseRecordingUrl — the vendor sample has no scheme', () => {
+  it('adds https:// to a scheme-less link, which fetch() would otherwise reject', () => {
+    expect(normaliseRecordingUrl('www.way2voice.in/abc.mp3')).toBe('https://www.way2voice.in/abc.mp3');
+  });
+  it('keeps an explicit scheme', () => {
+    expect(normaliseRecordingUrl('http://x.test/a.mp3')).toBe('http://x.test/a.mp3');
+  });
+  it('treats empty and placeholder values as no recording', () => {
+    for (const v of ['', '  ', 'null', 'NA', '-']) expect(normaliseRecordingUrl(v)).toBeNull();
+  });
+});
+
+describe('pickField — tolerate the vendor renaming a field', () => {
+  it('matches regardless of case and separators', () => {
+    const o = { RecordingUrl: 'a', recording_url: 'b' };
+    expect(pickField(o, 'recordingurl')).toBe('a');
+    expect(pickField({ recording_url: 'b' }, 'recordingurl')).toBe('b');
+  });
+  it('returns undefined when the field is absent', () => {
+    expect(pickField({ CallerNo: '1' }, 'recordingurl')).toBeUndefined();
+  });
+});

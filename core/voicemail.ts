@@ -361,7 +361,7 @@ export function parseCallWebhookPayload(x: RawCallWebhookPayload): Parsed<Valida
   }
 
   const agentNo = str(x.AgentNo) ?? '';
-  const recordingUrl = str(x.recordingurl) || null;
+  const recordingUrl = normaliseRecordingUrl(str(x.recordingurl) ?? '');
 
   return {
     ok: true,
@@ -370,6 +370,36 @@ export function parseCallWebhookPayload(x: RawCallWebhookPayload): Parsed<Valida
       agentNo, callStatus, recordingUrl, callType,
     },
   };
+}
+
+/**
+ * The vendor's own sample sends `www.way2voice.in/abc.mp3` — no scheme — and `fetch()` rejects a
+ * scheme-less URL outright, so every such recording would silently fail to download. Anything
+ * that still isn't a valid http(s) URL after adding one is treated as no recording at all.
+ */
+export function normaliseRecordingUrl(raw: string): string | null {
+  const t = raw.trim();
+  if (!t || /^(null|none|na|n\/a|-)$/i.test(t)) return null;
+  const withScheme = /^https?:\/\//i.test(t) ? t : `https://${t.replace(/^\/+/, '')}`;
+  try {
+    const u = new URL(withScheme);
+    return u.protocol === 'http:' || u.protocol === 'https:' ? u.toString() : null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Read a webhook field by name, tolerating the vendor's casing/separator drift — their doc spells
+ * it `recordingurl`, but a system that sends `RecordingUrl` or `recording_url` must not have its
+ * recording silently dropped for want of a capital letter.
+ */
+export function pickField(o: Record<string, unknown>, ...names: string[]): unknown {
+  const want = new Set(names.map(n => n.toLowerCase().replace(/[_\s-]/g, '')));
+  for (const [k, val] of Object.entries(o)) {
+    if (want.has(k.toLowerCase().replace(/[_\s-]/g, ''))) return val;
+  }
+  return undefined;
 }
 
 /**
@@ -416,11 +446,18 @@ export interface CallWebhookCapture {
  */
 export function buildCallWebhookCapture(
   v: ValidatedCallWebhook,
-  ctx: { campusOrgUnitId: string; transcript: string | null; classifierName?: string },
+  ctx: {
+    campusOrgUnitId: string;
+    transcript: string | null;
+    classifierName?: string;
+    /** Whether the recording was actually downloaded — a URL alone is not audio on the record. */
+    audioAttached?: boolean;
+  },
 ): CallWebhookCapture {
   const arrivedAt = v.startedAt;
   const callerLabel = v.callerNo || 'a withheld number';
   const sourceMessageId = callWebhookSourceMessageId(v.callerNo, v.startedAt);
+  const audioAttached = ctx.audioAttached ?? Boolean(v.recordingUrl);
 
   if (ctx.transcript) {
     const sug = getClassifier(ctx.classifierName ?? 'rules').classify({
@@ -454,10 +491,13 @@ export function buildCallWebhookCapture(
     subject: needsListen
       ? `Voicemail from ${callerLabel} — needs a listen`
       : `Call from ${callerLabel} — ${outcome}`,
-    body: needsListen
-      ? 'A recording was captured, but it could not be transcribed. Listen to the recording '
-        + 'attached to this record to find out what it was about.'
-      : `The call ${outcome} (agent ${v.agentNo || 'unassigned'}). No recording was provided.`,
+    body: !needsListen
+      ? `The call ${outcome} (agent ${v.agentNo || 'unassigned'}). No recording was provided.`
+      : audioAttached
+        ? `The call ${outcome} (agent ${v.agentNo || 'unassigned'}). A recording was captured but `
+          + 'could not be transcribed — listen to the recording attached to this record.'
+        : `The call ${outcome} (agent ${v.agentNo || 'unassigned'}). The vendor sent a recording `
+          + `link, but it could not be downloaded — open it directly: ${v.recordingUrl}`,
     campusOrgUnitId: ctx.campusOrgUnitId,
     arrivedAt,
     clockStartsAt: clockStart(arrivedAt),
