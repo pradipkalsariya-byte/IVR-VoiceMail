@@ -20,6 +20,7 @@ import {
 } from '@/core/voicemail';
 import { getTranscriber } from '@/core/transcribe';
 import { notifyVoicemailTeam } from '@/lib/notify-voicemail';
+import { toStandardMp3 } from '@/lib/audio-convert';
 
 /** `AGENT_CAMPUS_MAP="9225214602:fsk,9225214603:fwgs"` — which AgentNo maps to which campus
  *  CODE. Reuses VOICEMAIL_LINE_CAMPUS_MAP's env var name for continuity with existing config. */
@@ -123,13 +124,27 @@ async function handle(req: NextRequest, raw: RawCallWebhookPayload, receivedKeys
         // A login or error page answered with 200 — storing it as "audio" would give a silent player.
         recordingNote = `Recording link ${v.recordingUrl} returned a web page, not audio — open it directly.`;
       } else {
-        audioBuffer = Buffer.from(new Uint8Array(await res.arrayBuffer()));
-        audioContentType = type;
-        recordingNote = `Recording downloaded from ${v.recordingUrl} — ${Math.round(audioBuffer.length / 1024)} KB, ${type}.`;
+        const raw = Buffer.from(new Uint8Array(await res.arrayBuffer()));
+        const kb = Math.round(raw.length / 1024);
+        const converted = await toStandardMp3(raw);
+        if (converted.ok) {
+          audioBuffer = converted.audio;
+          audioContentType = 'audio/mpeg';
+          recordingNote = `Recording downloaded from ${v.recordingUrl} — ${kb} KB ${type}, converted to standard MP3.`;
+        } else {
+          audioBuffer = raw;
+          audioContentType = type;
+          recordingNote = `Recording downloaded from ${v.recordingUrl} — ${kb} KB ${type}; conversion failed (${converted.reason}), kept as received.`;
+        }
       }
     } catch (err) {
       audioBuffer = null;
-      recordingNote = `Recording link ${v.recordingUrl} could not be downloaded (${err instanceof Error ? err.message : String(err)}).`;
+      // undici's "fetch failed" hides the real reason (refused, timeout, DNS, TLS) in `cause`.
+      const cause = (err as { cause?: { code?: string; message?: string } })?.cause;
+      const why = [err instanceof Error ? err.message : String(err), cause?.code, cause?.message]
+        .filter(Boolean).join(' — ');
+      recordingNote = `Recording link ${v.recordingUrl} could not be downloaded (${why}).`;
+      console.warn(`[voicemail] recording download failed: ${why}`);
     }
   }
 

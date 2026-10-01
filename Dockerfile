@@ -15,8 +15,10 @@
 FROM node:20-bookworm-slim AS base
 
 # openssl: Prisma's engines need it at runtime (debian-slim ships without it).
+# ffmpeg: the IVR vendor serves 8 kHz MPEG-2.5 audio with a junk prefix that browsers stall on —
+# every recording is re-encoded to a standard MP3 before it is stored (lib/audio-convert.ts).
 RUN apt-get update \
-  && apt-get install -y --no-install-recommends openssl ca-certificates \
+  && apt-get install -y --no-install-recommends openssl ca-certificates ffmpeg \
   && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
